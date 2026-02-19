@@ -1,0 +1,13 @@
+{
+  "domain": "argos_translate",
+  "name": "Argos Translate",
+  "codeowners": ["@Dabentz"],
+  "config_flow": true,
+  "dependencies": ["frontend"],
+  "documentation": "https://github.com/Dabentz/ha-argos-translate",
+  "integration_type": "service",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/Dabentz/ha-argos-translate/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}
