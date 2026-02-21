@@ -86,8 +86,11 @@ Plans:
   3. All tests pass
   4. README documents installation, configuration, card usage, service examples
 
+**Plans:** 2 plans
+
 Plans:
-- [ ] 03-01: Update tests for LibreTranslate-specific logic and validate CI
+- [ ] 03-01-PLAN.md — Fix existing tests and add comprehensive test coverage (services, sensors)
+- [ ] 03-02-PLAN.md — Write README documentation, validate CI, real-device testing checkpoint
 
 ## Progress
 
@@ -98,4 +101,4 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. API Client + Data Layer | 0/2 | Complete    | 2026-02-21 |
 | 2. Translation Service + Card | 0/2 | Complete    | 2026-02-21 |
-| 3. Polish + Validation | 0/1 | Not started | - |
+| 3. Polish + Validation | 0/2 | Not started | - |
