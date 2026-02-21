@@ -2,34 +2,57 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect to Service",
-        "description": "Enter the connection details for your service.",
+        "title": "Connect to LibreTranslate",
+        "description": "Enter connection details for your LibreTranslate server.",
         "data": {
+          "name": "Instance Name",
           "host": "Host",
-          "port": "Port"
-          ,"api_key": "API Key"
+          "port": "Port",
+          "use_ssl": "Use HTTPS",
+          "api_key": "API Key (optional)"
+        },
+        "data_description": {
+          "name": "A friendly name for this server (used as device name)",
+          "host": "Hostname or IP address of the LibreTranslate server",
+          "port": "Port number (e.g., 5000)",
+          "use_ssl": "Enable if your server uses HTTPS",
+          "api_key": "Leave blank if your server does not require authentication"
         }
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect",
-      "invalid_auth": "Invalid authentication",
+      "cannot_connect": "Cannot connect to LibreTranslate server",
+      "invalid_auth": "Invalid API key",
+      "no_languages": "Server has no language models installed",
       "unknown": "Unexpected error"
     },
     "abort": {
-      "already_configured": "Service is already configured"
+      "already_configured": "This LibreTranslate server is already configured"
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Update Service Settings",
+        "title": "LibreTranslate Settings",
         "data": {
           "host": "Host",
           "port": "Port",
-          "api_key": "API Key"
+          "use_ssl": "Use HTTPS",
+          "api_key": "API Key (optional)"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of the LibreTranslate server",
+          "port": "Port number",
+          "use_ssl": "Enable if your server uses HTTPS",
+          "api_key": "Leave blank if your server does not require authentication"
         }
       }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to LibreTranslate server",
+      "invalid_auth": "Invalid API key",
+      "no_languages": "Server has no language models installed",
+      "unknown": "Unexpected error"
     }
   }
 }
