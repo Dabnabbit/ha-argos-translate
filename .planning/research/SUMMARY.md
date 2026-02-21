@@ -1,213 +1,207 @@
-# Research Summary: HA Argos Translate Integration
+# Research Summary: HA Argos Translate v1.1
 
-**Synthesized:** 2026-02-19
-**Project:** Home Assistant HACS integration for local text translation via LibreTranslate/Argos Translate
-**Researcher Confidence:** HIGH (HA patterns), MEDIUM (LibreTranslate API edge cases)
+**Project:** ha-argos-translate — Home Assistant HACS integration for local text translation via LibreTranslate
+**Domain:** Home Assistant custom integration enhancement
+**Researched:** 2026-02-21
+**Confidence:** HIGH
 
 ---
 
 ## Executive Summary
 
-This project fills a genuine gap in the Home Assistant ecosystem: there is currently no local text translation integration. Whisper (STT) and Piper (TTS) exist for speech processing, but the middle link — translating text between languages locally — is missing. LibreTranslate (powered by Argos Translate's CTranslate2 backend) is the clear choice as the server backend: it's the dominant self-hosted translation solution, runs as a single Docker container, and exposes a simple REST API with no authentication required for self-hosted instances.
+The v1.1 milestone is a focused enhancement of an already-shipped v1.0 integration. Three features are in scope: auto-detect source language, an options flow that correctly reloads the coordinator on save, and Lovelace card polish (theming, accessibility, mobile). None of these require new dependencies, new files, or architectural redesign. All three are pure extensions of existing modules — the largest single change is the Lovelace card at approximately 80–120 lines added.
 
-The integration architecture follows well-established HA patterns: a `ConfigFlow` for UI-based setup, a `DataUpdateCoordinator` that polls `/languages` every 5 minutes (serving double duty as health check and language catalog), two `CoordinatorEntity`-based sensors (server status and language count), a domain-scoped `SupportsResponse.ONLY` service call for automation use, and a LitElement Lovelace card with language dropdowns and real-time translation. Zero pip dependencies are needed — everything is raw `aiohttp` against the LibreTranslate REST API, using HA's bundled session management.
+The recommended approach is ordered by dependency: fix the options flow reload bug first (isolated, high user value, touches only `config_flow.py`), then implement auto-detect on the Python side (`api.py` → `coordinator.py` → `services.py`), then extend the card with auto-detect UI and polish changes. Testing can follow each feature or be batched at the end. The `async_step_reconfigure` pattern documented in HA 2024 is acknowledged as the HA-idiomatic alternative for credential changes, but the existing `OptionsFlowHandler` approach is simpler and correct once the missing `async_reload` call is added — keep it.
 
-The primary risks are all known and preventable: the static path registration API changed in HA 2025.7 (must use `async_register_static_paths`), the translate service must be registered in `async_setup` rather than `async_setup_entry` to avoid duplicate registration on reload, and the card's `returnResponse: true` pattern for receiving service response data requires HA 2023.12+. The target hardware (QNAP Celeron J4125) will produce 5-15 second translation latency for longer texts, requiring loading states and a 30-second timeout. All these are straightforward to implement correctly from the start.
+The primary risks are operational rather than architectural. The coordinator silently continues using stale credentials until a reload is triggered — this is the v1.0 bug being fixed and must be verified on real hardware before closing the phase. Auto-detect has a known edge case: LibreTranslate's detector operates on a broader vocabulary than the installed language set, meaning a successful detection result may still be untranslatable. Confidence thresholds and installed-language validation must be applied before surfacing detection results to the user. Browser caching of the card JS after updates is a deploy concern that requires a versioned URL strategy.
 
 ---
 
 ## Key Findings
 
-### From STACK.md
+### Recommended Stack
 
-| Technology | Rationale |
-|------------|-----------|
-| Python 3.12+ (HA-bundled) | No choice — HA's virtualenv; no installation needed |
-| `aiohttp` (HA-bundled) | All HTTP to LibreTranslate; never create your own session |
-| `voluptuous` (HA-bundled) | Config flow schema validation; bundled, do not re-require |
-| LitElement (HA-bundled) | Single-file no-build Lovelace card; avoids npm/webpack |
-| Zero pip dependencies | `requirements: []` in manifest.json — everything is HA-bundled |
+No new technologies are introduced in v1.1. The existing stack (Python 3.12+, aiohttp, voluptuous, LitElement, DataUpdateCoordinator) requires only pattern additions from HA's own framework.
 
-**Critical version requirements:**
-- HA 2025.7+ — required for `async_register_static_paths` (old API removed)
-- HA 2023.12+ (manifest min: 2024.1.0) — required for `callService` with `returnResponse: true`
-- LibreTranslate 1.5+ — stable REST API with `/languages` endpoint
+**Core technologies (unchanged):**
+- Python / aiohttp (HA-bundled) — `async_translate` return type changes from `str` to `dict`; no new packages
+- LitElement (HA-bundled) — card UI additions; no new JS imports or build tooling
+- voluptuous (HA-bundled) — `source` field made optional with `default="auto"`
 
-**Settled stack decisions:**
-1. `async_get_clientsession(hass)` — mandatory, never create own aiohttp session
-2. `SupportsResponse.ONLY` in `async_setup` (not `async_setup_entry`) — domain-scoped service
-3. `async_register_static_paths` + `StaticPathConfig` — modern static path API
-4. `runtime_data` on `ConfigEntry` — modern 2025 pattern replacing `hass.data[DOMAIN]`
-5. `callService` with `returnResponse: true` — card receives translation result directly
+**New HA patterns (import changes only, no new dependencies):**
+- `OptionsFlowWithReload` (HA 2025.8+) — drop-in base class for `OptionsFlowHandler`; triggers automatic reload after save. Verify HA version before using; fall back to explicit `async_reload` if needed.
+- `async_step_reconfigure` + `async_update_reload_and_abort` (HA 2024+) — alternative pattern for credential changes; acknowledged but not recommended as primary path since the existing options flow already works.
 
-**One unresolved medium-confidence item:** The exact response shape from `callService` with `returnResponse` (whether it's `result.response.translated_text` or `result.translated_text`) needs verification against current HA frontend source before card implementation.
+**Critical version note:** `OptionsFlowWithReload` requires HA 2025.8+. The project targets 2025.7+. Safest path: keep the existing `OptionsFlow` base class and add an explicit `await self.hass.config_entries.async_reload(entry.entry_id)` after `async_update_entry`. This works on all supported HA versions and is the approach used in the architecture research.
 
-### From FEATURES.md
+See `.planning/research/STACK.md` for full file-by-file change map.
 
-**Must-have for v1 (P0):**
-- Config Flow: host/port/api_key (optional) with `/languages` connection validation
-- DataUpdateCoordinator: polls `/languages` every 5 minutes
-- `argos_translate.translate` service call (SupportsResponse.ONLY)
-- Lovelace card: source/target dropdowns, textarea input, translated output, translate button, swap button, status indicator
+### Expected Features
 
-**Should-have for v1 (P1):**
-- Status sensor: "online"/"error" with last_check and error_message attributes
-- Language count sensor: integer count with full language list in attributes
-- Visual card editor: entity picker, title, default source/target
+This is a v1.1 milestone targeting three features. All "table stakes" below are net-new additions.
 
-**Nice-to-have for v1.x (P2, do not block v1):**
-- Language pair validation (disable Translate if pair unavailable) — actually this IS needed in service; card filtering is P2
-- Loading state/spinner during translation
+**Must have (table stakes for v1.1):**
+- Options flow saves then reloads integration — currently coordinator uses stale credentials until HA restart
+- Auto-detect source language in service call — `source: "auto"` bypass in `services.py`; API already passes it through
+- Auto-detect source language in card UI — "Auto-detect" as first option in source dropdown; all-targets mode when auto selected
+- Card error messages distinguish server-offline from bad-request — currently shows raw `err.message`
+- Card explains disabled translate button state — no current feedback when `canTranslate` is false
 
-**Deferred to v2+:**
-- Auto-detect source language
-- Translation history
-- Batch translation
-- Pivot translation (A→B via C)
-- Speech-to-translate pipeline (Whisper → Translate → Piper)
+**Should have (v1.1 bonus within same milestone):**
+- Detected language label in card output — "Detected: French (90%)" when `source="auto"` was used
+- Detected language in service response — `detected_language` and `detection_confidence` fields for automation authors
+- ARIA labels on card form controls — `aria-label` on both `<select>` and `<textarea>` elements
+- Mobile layout fix — flex-wrap on language row; minimum 44px touch targets on swap button
 
-**Scope assessment:** Current v1 scope is right-sized. The Lovelace card is the largest single item (~500-800 lines of JS) and warrants its own phase.
+**Defer to v2+:**
+- Copy-to-clipboard on output
+- HA native form elements (`ha-select`, `ha-textfield`) — medium refactor, breaking risk across HA versions
+- Translation history — requires persistent storage, out of scope per PROJECT.md
+- Keyboard shortcut Ctrl+Enter for translate
 
-### From ARCHITECTURE.md
+See `.planning/research/FEATURES.md` for prioritization matrix and existing-code assessment.
 
-**File structure (6 Python files + 1 JS + supporting files):**
-```
-custom_components/argos_translate/
-├── __init__.py          # async_setup (service + static path) + async_setup_entry
-├── config_flow.py       # Single-step: host, port, api_key
-├── coordinator.py       # DataUpdateCoordinator polling /languages every 5 min
-├── sensor.py            # Status + Language Count CoordinatorEntity sensors
-├── api.py               # LibreTranslateClient wrapper (separate from coordinator)
-├── const.py             # DOMAIN, DEFAULT_PORT, scan intervals
-├── manifest.json        # HACS metadata, min_version, iot_class
-├── strings.json         # Config flow UI strings
-├── services.yaml        # Service definition (required for automation UI)
-├── argos-translate-card.js  # LitElement card + editor (single file)
-└── translations/en.json # English translations for config flow
-```
+### Architecture Approach
 
-**Key architectural patterns:**
-- **Separate `api.py`** from `coordinator.py` — keeps concerns clean; coordinator orchestrates, client communicates
-- **Card reads language data from sensor attributes** — indirect coupling avoids custom WebSocket commands; language count entity required in card config
-- **Service handler in `async_setup` dynamically looks up config entry** — `hass.config_entries.async_entries(DOMAIN)[0]` — works for single-entry use case
-- **API key in POST body** (not header) — LibreTranslate convention, not HTTP header auth
-- **Target language filtering** — `sourceLang.targets[]` from /languages response drives dropdown filtering
+V1.1 makes no structural changes to the integration. Every feature integrates into existing files. The largest modification is the Lovelace card. The data flow for auto-detect follows a clean path from card through service to API: `source: "auto"` passes through unchanged to LibreTranslate's `/translate` endpoint, which returns `detectedLanguage` in the same response. No separate `/detect` call is needed.
 
-**Data flows:**
-- Translation: card → `callService(returnResponse: true)` → `handle_translate()` → `client.translate()` → POST `/translate` → return `{translated_text}`
-- Language refresh: coordinator timer → GET `/languages` → sensors update → card reads attributes → dropdowns update
+**Modified components and scope:**
 
-### From PITFALLS.md
+| File | Change | Scope |
+|------|--------|-------|
+| `api.py` | `async_translate` returns `dict` instead of `str` | ~15 lines |
+| `coordinator.py` | Propagates dict return from API | ~2 lines |
+| `services.py` | Accept `source="auto"`, skip validation, enrich response | ~20 lines |
+| `config_flow.py` | Add `async_reload` after successful options save | ~3 lines |
+| `translations/en.json` | Document `"auto"` source value | ~5 lines |
+| `frontend/argos_translate-card.js` | Auto-detect option, detected language display, ARIA, CSS | ~80–120 lines |
+| `tests/test_config_flow.py` | Options flow test coverage | ~40 lines |
+| `tests/test_services.py` | `source="auto"` service call coverage | ~30 lines |
 
-**Top pitfalls with prevention (all must be addressed from day 1):**
+**Key patterns established by research:**
+1. `source="auto"` pass-through — do not validate against the language list; let LibreTranslate handle it
+2. Reload-on-update — any change to coordinator-consumed `entry.data` values must be followed by `async_reload`
+3. Card reads language data from sensor attributes — unchanged from v1.0; do not alter this pattern
 
-| # | Pitfall | Severity | Prevention |
-|---|---------|----------|------------|
-| 01 | `register_static_path` removed in HA 2025.7 | CRITICAL | Use `async_register_static_paths` + `StaticPathConfig` from the start |
-| 02 | aiohttp session leak | HIGH | Always `async_get_clientsession(hass)`, never manual session |
-| 03 | Service in `async_setup_entry` | MEDIUM | Register in `async_setup`; dynamic entry lookup in handler |
-| 04 | Missing `unique_id` in config flow | MEDIUM | `f"{host}:{port}"` as unique_id + `_abort_if_unique_id_configured()` |
-| 05 | API key in header (not body) | LOW | POST body: `{"api_key": key}` not `X-Api-Key` header |
-| 06 | Wrong `iot_class` in manifest | LOW | `"iot_class": "local_polling"` |
-| 07 | Language pair not validated | MEDIUM | Validate against coordinator data before API call; filter card dropdowns |
-| 08 | Translation timeout on slow hardware | MEDIUM | `aiohttp.ClientTimeout(total=30)` on translate calls; loading spinner |
-| 09 | `returnResponse` not in older HA | MEDIUM | `"min_version": "2024.1.0"` in manifest |
-| 10 | Empty/whitespace input | LOW | Disable Translate button; return empty string from service |
-| 11 | Missing/malformed `services.yaml` | MEDIUM | Required for Developer Tools and automation UI |
-| 12 | Card resource not auto-registered | MEDIUM | Document manual resource addition; HACS handles at install time |
-| 13 | Coordinator not ready at service call | MEDIUM | Guard checks in handler: entries exist, runtime_data set, coordinator.data populated |
+See `.planning/research/ARCHITECTURE.md` for data flow diagrams and anti-patterns.
 
-**"Looks done but isn't" checklist from PITFALLS.md** should be used as a phase exit criterion for each implementation phase.
+### Critical Pitfalls
+
+**Top 5 pitfalls for v1.1:**
+
+1. **Coordinator not rebuilt after options save** — The existing code calls `async_update_entry` but does not trigger a reload. Without an explicit `await hass.config_entries.async_reload(entry.entry_id)`, the coordinator continues using the old host/port/API key indefinitely. Verify on real HA by changing the host address and confirming the integration fails (as it should) pointing at the non-existent new host.
+
+2. **Detected language not in available languages list** — LibreTranslate's detector operates on a global vocabulary; only installed model pairs are in `coordinator.data["languages"]`. Always validate the detected language code against installed codes before using it in the UI. Show a message when detection succeeds but the language is not installed.
+
+3. **Auto-detect with low or zero confidence** — The `/detect` endpoint (and inline detection via `source="auto"`) returns a confidence float. Below ~50.0, results are unreliable. Short inputs (< 5 characters) frequently trigger incorrect detections. Apply a minimum confidence threshold and surface the confidence value to the user rather than silently applying the result.
+
+4. **Browser cache serves stale card JS after update** — `StaticPathConfig(cache_headers=True)` causes browsers (especially iOS Companion App) to cache the card JS indefinitely. Append a version query parameter to the registered Lovelace resource URL (e.g., `?v=0.3.0`) and update `CARD_VERSION` on every card change.
+
+5. **Options data written to `entry.options` instead of `entry.data`** — The coordinator constructor reads `entry.data` exclusively. The options flow must continue writing merged credentials to `entry.data` via `async_update_entry` before returning `async_create_entry(data={})`. The current implementation does this correctly; preserve the pattern and add a comment explaining the intentional deviation from the standard options pattern.
+
+See `.planning/research/PITFALLS.md` for the full "looks done but isn't" verification checklist.
 
 ---
 
 ## Implications for Roadmap
 
-The research points clearly to a 4-phase structure. The phases are ordered by dependency: core integration before service, service before card, everything before HACS packaging.
+Based on combined research, a 3-phase structure is appropriate for v1.1. Features are ordered by dependency; the options flow fix is isolated and high-value so it ships first.
 
-### Suggested Phase Structure
+### Phase 1: Options Flow Fix
 
-**Phase 1: Integration Core**
-*Rationale: Everything else depends on this. Sets up the HA integration scaffold, config flow, coordinator, and sensors. No UI, no service — just the data foundation.*
+**Rationale:** The most isolated change in v1.1 — only `config_flow.py` and one test file. Ships a critical correctness fix immediately for users who deployed v1.0 and need to change their server address. Unblocks safe deployment testing for phases 2 and 3.
 
-Delivers:
-- HACS-installable integration that connects to LibreTranslate
-- Status sensor and language count sensor appearing in HA
-- Config flow with connection validation and duplicate prevention
+**Delivers:**
+- Options flow saves new host/port/API key and immediately reloads the integration
+- Coordinator rebuilds with new credentials on save
+- Connection validation errors shown before saving (already works; preserve it)
 
-Features: Config Flow (P0), Coordinator (P0), Status Sensor (P1), Language Count Sensor (P1)
+**Addresses:** Options flow reload (P1 must-have), options translation string verification
 
-Must avoid: PITFALL-01 (static path), PITFALL-02 (session leak), PITFALL-04 (unique_id), PITFALL-06 (iot_class)
+**Avoids:**
+- PITFALL-01: Coordinator using stale credentials (the core bug being fixed)
+- PITFALL-04: Data written to wrong entry property
+- PITFALL-08: Translation strings missing for options step
 
-Research flag: Standard HA patterns — NO research phase needed. Patterns are well-documented.
+**Verification gate:** After saving a changed host address to a non-existent server, HA logs must show `async_setup_entry` being called and a connection failure to the new address — not continued success on the old address.
 
----
-
-**Phase 2: Translation Service**
-*Rationale: The service call is the core value proposition. Automations can use it without the card existing. Must be solid before building UI on top of it.*
-
-Delivers:
-- `argos_translate.translate` service callable from automations
-- Language pair validation before API calls
-- `services.yaml` for automation UI integration
-- Proper error handling for server unavailability
-
-Features: Translate service call (P0), services.yaml (required)
-
-Must avoid: PITFALL-03 (service in wrong place), PITFALL-05 (API key in header), PITFALL-07 (pair validation), PITFALL-08 (timeout), PITFALL-11 (services.yaml), PITFALL-13 (coordinator readiness)
-
-Research flag: Standard HA patterns — NO research phase needed. `SupportsResponse.ONLY` is well-documented.
+Research flag: NO — standard HA patterns, well-documented.
 
 ---
 
-**Phase 3: Lovelace Card**
-*Rationale: UI layer on top of working backend. The card is the largest single deliverable (~500-800 lines of JS). Keep it in its own phase to avoid entangling JS complexity with Python backend work.*
+### Phase 2: Auto-Detect and Card Polish
 
-Delivers:
-- LitElement card with source/target dropdowns
-- Dynamic target language filtering based on source selection
-- Textarea input + read-only output area
-- Translate button with loading state
-- Swap button (languages + text)
-- Status indicator (online/offline + language count)
-- Visual card editor (entity, title, defaults)
+**Rationale:** Auto-detect Python changes must precede card UI changes because the card calls the service. Python side can be tested via HA Developer Tools independently of the card. Card polish and auto-detect UI are combined in the same phase because both modify `argos_translate-card.js` — one session avoids double-touching the file.
 
-Features: Lovelace card (P0), card editor (P1), loading state (P2)
+**Delivers:**
+- `source: "auto"` accepted in service call; validation bypassed; detected language returned
+- "Auto-detect" option in card source dropdown
+- Target dropdown shows all available languages when source is "auto"
+- Detected language displayed in card output ("Detected: French (90%)")
+- ARIA labels on form controls
+- Minimum 44px touch targets on swap button
+- Responsive CSS for narrow viewports
+- Improved error messages distinguishing server-offline from bad-request
+- Disabled button explanation text
 
-Must avoid: PITFALL-09 (returnResponse compatibility), PITFALL-10 (empty input), PITFALL-12 (resource registration)
+**Addresses:** All P1 must-haves (auto-detect service, auto-detect card UI, error messages, button state UX) and all P2 should-haves (detected language label, ARIA, mobile layout)
 
-Research flag: CONSIDER research phase for `callService` `returnResponse` response shape — the exact `result.response.translated_text` path needs verification against current HA frontend source before implementation.
+**Avoids:**
+- PITFALL-02: Low-confidence detection applied silently — apply 50.0 threshold
+- PITFALL-03: Detected language not in installed list — validate before use
+- PITFALL-05: Auto-detect firing on every keypress — keep explicit Translate button
+- PITFALL-07: Dark theme select readability — test on real hardware
 
----
+**Implementation order within phase:**
+1. `api.py` — `async_translate` returns `dict`
+2. `coordinator.py` — propagate dict return
+3. `services.py` — accept `"auto"`, skip validation, enrich response
+4. `tests/test_services.py` — coverage for auto-detect path
+5. `argos_translate-card.js` — auto-detect UI, ARIA, CSS polish
 
-**Phase 4: HACS Packaging and Distribution**
-*Rationale: Once the integration works end-to-end, package it for HACS distribution. Involves HACS validation, hassfest compliance, documentation.*
-
-Delivers:
-- `hacs.json` with correct metadata
-- README with installation instructions and resource registration steps
-- hassfest validation passing
-- HACS validation passing
-
-Features: HACS distribution, documentation
-
-Must avoid: PITFALL-01 (hassfest will catch static path issues), PITFALL-06 (iot_class triggers hassfest)
-
-Research flag: Standard HACS patterns — NO research phase needed.
+Research flag: NO — patterns are documented in research files with verified code examples.
 
 ---
 
-## Research Flags
+### Phase 3: Deploy Validation and Stabilization
+
+**Rationale:** After functional implementation, real-hardware verification catches issues that unit tests miss. Browser caching, dark theme rendering, mobile layout, and coordinator reload behavior all require live HA validation. This phase also ensures HACS and hassfest compliance after all changes.
+
+**Delivers:**
+- Verified options flow reload on real HA instance
+- Card tested on light and dark themes
+- Card tested on mobile viewport
+- Browser cache busting via versioned URL (bump `CARD_VERSION`, update Lovelace resource URL)
+- hassfest validation passing for any new service definitions
+- HACS action passing
+
+**Addresses:** All items on the "looks done but isn't" checklist from PITFALLS.md
+
+**Avoids:**
+- PITFALL-06: Browser cache serving stale card JS
+- PITFALL-07: Dark theme select unreadable
+- hassfest failure if detect service is added
+
+Research flag: NO — standard HACS/hassfest patterns; PITFALLS.md covers all edge cases.
+
+---
+
+### Phase Ordering Rationale
+
+- **Options flow first:** Standalone; ships a real bug fix immediately; establishes deployment testing confidence before touching the API and card.
+- **Python before JS:** `services.py` must accept `source="auto"` before the card can send it; Python path testable via Developer Tools without any card changes.
+- **Auto-detect and polish in one session:** Both touch `argos_translate-card.js`; combining avoids revisiting the same file in a separate phase.
+- **Deploy validation last:** Real-hardware issues (caching, themes, mobile) cannot be caught in unit tests; dedicate a phase to them rather than mixing with feature work.
+
+### Research Flags
 
 | Phase | Needs Research Phase? | Reason |
 |-------|----------------------|--------|
-| Phase 1: Integration Core | NO | Well-documented HA patterns; coordinator + sensors are standard |
-| Phase 2: Translation Service | NO | `SupportsResponse.ONLY` is well-documented since HA 2023.7 |
-| Phase 3: Lovelace Card | MAYBE | Verify `callService` `returnResponse` response shape before JS implementation |
-| Phase 4: HACS Packaging | NO | Standard HACS pattern; PITFALLS.md covers all edge cases |
+| Phase 1: Options Flow Fix | NO | Well-documented HA patterns; 3-line fix with known implementation |
+| Phase 2: Auto-Detect and Card Polish | NO | STACK.md and ARCHITECTURE.md contain verified code examples for every change |
+| Phase 3: Deploy Validation | NO | Verification checklist in PITFALLS.md covers all known edge cases |
 
-**If research is done for Phase 3**, the specific question to answer is:
-> What is the exact response shape returned by `this.hass.callService("domain", "service", data, {returnResponse: true})`? Is it `result.response.field` or `result.field`?
+No research phases are needed. All three features have high-confidence, implementation-ready patterns documented in the research files.
 
 ---
 
@@ -215,57 +209,44 @@ Research flag: Standard HACS patterns — NO research phase needed.
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack choices | HIGH | Python/HA patterns are established; aiohttp, LitElement, SupportsResponse all verified |
-| Feature scope | HIGH | Features are well-scoped; v1 vs v2 split is clear and defensible |
-| Architecture | HIGH | Component boundaries are clean; HA patterns applied correctly |
-| Pitfall avoidance | HIGH | 13 pitfalls documented with specific fixes; all preventable |
-| LibreTranslate API | MEDIUM | Trained on API docs, not live docs; API has been stable for years |
-| Card `returnResponse` shape | MEDIUM | Exact response object path needs verification against HA frontend source |
-| Competitive landscape | MEDIUM | No known existing HA local translation integration; may be obscure community entries not in training data |
+| Stack | HIGH | All technologies are existing; new patterns (`OptionsFlowWithReload`, `async_step_reconfigure`) confirmed from official HA developer docs |
+| Features | HIGH | Feature list derived from direct codebase inspection (existing code read in FEATURES.md); gaps are unambiguous |
+| Architecture | HIGH | HA coordinator and options flow patterns confirmed from official docs; LibreTranslate API behavior confirmed from official API docs |
+| Pitfalls | HIGH (HA) / MEDIUM (LibreTranslate detection) | HA patterns from official docs; LibreTranslate detection edge cases from community sources (CLD2 limitations, LexiLang hybrid detector) |
 
-**Overall confidence: HIGH** — The HA integration patterns are well-established and the research is comprehensive. The one medium-confidence item (response shape of callService with returnResponse) is a small, localized concern that won't affect phase 1 or 2.
+**Overall confidence: HIGH**
 
----
+The v1.1 scope is well-bounded and all three features have direct precedent in official HA developer documentation. The only medium-confidence area is LibreTranslate's detection behavior for edge-case inputs (short text, obscure languages), which is handled by the confidence threshold mitigation and user-visible confidence display.
 
-## Gaps to Address During Planning
+### Gaps to Address
 
-1. **`callService` response shape verification** — Before Phase 3 implementation, verify whether `this.hass.callService(..., {returnResponse: true})` returns `result.response.translated_text` or `result.translated_text`. Check current HA frontend source or test with a known SupportsResponse service.
+1. **`OptionsFlowWithReload` version compatibility** — requires HA 2025.8+; project targets 2025.7+. Use the explicit `async_reload` approach from ARCHITECTURE.md instead. This is documented and the fallback is clear, but should be called out explicitly in the Phase 1 plan.
 
-2. **Card resource auto-registration vs manual** — Research confirms HACS handles resource URL registration at install time, but the exact mechanism should be confirmed during Phase 4 planning. Some integrations auto-register via `lovelace_resources` in manifest; document which approach is used.
+2. **Confidence threshold tuning** — The 50.0 confidence threshold is a starting point. Real-world testing may reveal it is too conservative (high-confidence detections rejected) or too lenient (wrong detections accepted). Document as a known limitation; make the threshold visible in debug logs.
 
-3. **Single-entry assumption** — The service handler uses `entries[0]`, assuming one LibreTranslate server. This is fine for v1 but should be documented as a known limitation. Multi-server support is a v2+ concern.
-
-4. **Hardware performance baseline** — QNAP Celeron J4125 translation latency of 5-15 seconds is documented but not measured. The 30-second timeout should be validated against actual translation times for long texts during Phase 2 testing.
-
-5. **Language pair availability for common pairs** — The research assumes en↔es, en↔de, etc. are installed. The integration should handle the case where NO language packages are installed (coordinator returns empty list).
+3. **Card version bump strategy** — The specific mechanism for appending `?v=VERSION` to the Lovelace resource URL depends on how the integration registers resources (auto via `hacs.json` or documented as a manual step). Confirm the mechanism during Phase 3 planning.
 
 ---
 
-## Aggregated Sources
+## Sources
 
-*Compiled from all 4 research files. Confidence levels reflect training data vs live documentation.*
+### Primary (HIGH confidence)
+- [LibreTranslate /translate endpoint reference](https://docs.libretranslate.com/api/operations/translate/) — `source="auto"` behavior, `detectedLanguage` response shape
+- [LibreTranslate API Usage Guide](https://docs.libretranslate.com/guides/api_usage/) — `/detect` endpoint format, confidence response
+- [HA Config Flow Handler docs](https://developers.home-assistant.io/docs/config_entries_config_flow_handler/) — `async_step_reconfigure`, `async_update_reload_and_abort`, `_get_reconfigure_entry`
+- [HA Options Flow Handler docs](https://developers.home-assistant.io/docs/config_entries_options_flow_handler/) — `OptionsFlowWithReload` import path and code example
+- [HA reconfigure step blog](https://developers.home-assistant.io/blog/2024/03/21/config-entry-reconfigure-step/) — reconfigure vs. options flow distinction
+- Existing codebase (`config_flow.py`, `api.py`, `services.py`, `coordinator.py`, card JS) — read directly; HIGH confidence
 
-### Home Assistant Patterns (HIGH confidence)
-- HA Developer Docs: ConfigFlow, DataUpdateCoordinator, CoordinatorEntity
-- HA Developer Docs: `async_register_static_paths` + `StaticPathConfig` (2025.7+ API)
-- HA Developer Docs: `SupportsResponse.ONLY` service pattern (added 2023.7)
-- HA Developer Docs: `runtime_data` on ConfigEntry (modern 2025 pattern)
-- HA Developer Docs: `async_get_clientsession(hass)` mandatory pattern
-- hassfest quality scale rules: `inject-websession`, `iot_class`
-- HACS Developer Docs: `hacs.json` metadata, resource registration
+### Secondary (MEDIUM confidence)
+- [LibreTranslate community: auto-detect requirements](https://community.libretranslate.com/t/no-auto-detect-after-adding-a-language/1068) — LexiLang/langdetect dependency for detection
+- [LibreTranslate language detection issue #395](https://github.com/LibreTranslate/LibreTranslate/issues/395) — CLD2 failures for German, Japanese, English; hybrid detector implemented Oct 2023
+- [HA community: OptionsFlow data vs options](https://community.home-assistant.io/t/strange-behavior-with-optionflow-in-data-and-options-config-entry/855931/6) — reconfigure recommended over OptionsFlow for credential changes
+- [HA static path async registration](https://developers.home-assistant.io/blog/2024/06/18/async_register_static_paths/) — cache_headers=True sets long-lived headers
+- [HA frontend cache issues iOS](https://github.com/home-assistant/iOS/issues/3738) — persistent browser cache on mobile requires manual reset
+- [CLD2 design limitations](https://github.com/CLD2Owners/cld2) — designed for 200+ character texts
 
-### LibreTranslate API (MEDIUM confidence — training data, not live docs)
-- LibreTranslate REST API: `GET /languages`, `POST /translate`, `POST /detect`
-- LibreTranslate auth convention: API key in POST body (`api_key` field), not HTTP header
-- LibreTranslate Docker deployment: `libretranslate/libretranslate`, port 5500 default
-- Argos Translate engine: CTranslate2 backend, ~30+ language pairs
-
-### Frontend Patterns (MEDIUM confidence)
-- HA Frontend: `this.hass.callService()` with `returnResponse: true` (added 2023.12)
-- LitElement: single-file no-build Lovelace card pattern
-- HA Frontend: `this.hass.states[entityId].attributes` for reading entity attributes
-
-### Community/Ecosystem (MEDIUM confidence — training data)
-- Competitive analysis: No existing HA local text translation integration
-- HACS ecosystem: Custom integration distribution conventions
-- LibreTranslate active development status and license (AGPL-3.0)
+---
+*Research completed: 2026-02-21*
+*Milestone: v1.1 (auto-detect, options flow reload, card polish)*
+*Ready for roadmap: yes*
