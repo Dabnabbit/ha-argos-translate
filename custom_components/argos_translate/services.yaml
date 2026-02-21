@@ -1,11 +1,18 @@
-query:
-  description: "Query the Argos Translate service and optionally return results."
+translate:
   fields:
-    query:
+    text:
       required: true
-      description: "The query string to send."
-      example: "search term"
+      example: "Hello, how are you?"
       selector:
         text:
-  response:
-    optional: true
+          multiline: true
+    source:
+      required: true
+      example: "en"
+      selector:
+        text:
+    target:
+      required: true
+      example: "es"
+      selector:
+        text:
