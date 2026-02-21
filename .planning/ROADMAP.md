@@ -44,8 +44,11 @@ The following requirements are satisfied by the template overlay and do not need
   4. Language count sensor shows correct number with language list in attributes
   5. Sensors update every 5 minutes via coordinator
 
+**Plans:** 2 plans
+
 Plans:
-- [ ] 01-01: Customize api.py, const.py, coordinator.py, config_flow.py, sensor.py, strings for LibreTranslate
+- [ ] 01-01-PLAN.md — API foundation: customize const.py, api.py, coordinator.py for LibreTranslate
+- [ ] 01-02-PLAN.md — Config flow + sensors: config_flow.py, binary_sensor.py, sensor.py, strings, __init__.py
 
 ### Phase 2: Translation Service + Card
 **Goal**: Users can translate text via service call and Lovelace card
@@ -91,6 +94,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. API Client + Data Layer | 0/1 | Not started | - |
+| 1. API Client + Data Layer | 0/2 | Planning complete | - |
 | 2. Translation Service + Card | 0/2 | Not started | - |
 | 3. Polish + Validation | 0/1 | Not started | - |
