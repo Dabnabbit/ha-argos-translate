@@ -87,12 +87,20 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ArgosTranslateConfigEntry
 ) -> bool:
     """Set up Argos Translate from a config entry."""
+    _LOGGER.debug("Setting up Argos Translate entry: %s", entry.entry_id)
     coordinator = ArgosCoordinator(hass, entry)
-    await coordinator.async_config_entry_first_refresh()
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except Exception:
+        _LOGGER.exception("Coordinator first refresh failed")
+        raise
+    _LOGGER.debug("Coordinator data: %s", coordinator.data)
 
     entry.runtime_data = ArgosTranslateData(coordinator=coordinator)
 
+    _LOGGER.debug("Forwarding platform setups: %s", PLATFORMS)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    _LOGGER.debug("Platform setup complete")
     return True
 
 

@@ -64,7 +64,11 @@ class ArgosTranslateApiClient:
                 f"Authentication failed (HTTP {response.status})"
             )
 
-        response.raise_for_status()
+        if response.status >= 400:
+            raise CannotConnectError(
+                f"Server returned HTTP {response.status}: {response.reason}"
+            )
+
         return await response.json()
 
     async def async_test_connection(self) -> bool:

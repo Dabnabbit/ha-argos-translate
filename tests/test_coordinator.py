@@ -49,7 +49,7 @@ async def test_coordinator_update(hass: HomeAssistant) -> None:
 
 
 async def test_coordinator_update_failed(hass: HomeAssistant) -> None:
-    """Test failed refresh raises UpdateFailed when API is unreachable."""
+    """Test failed refresh sets last_update_success to False."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -68,5 +68,6 @@ async def test_coordinator_update_failed(hass: HomeAssistant) -> None:
         side_effect=CannotConnectError("Connection refused"),
     ):
         coordinator = ArgosCoordinator(hass, entry)
-        with pytest.raises(UpdateFailed):
-            await coordinator.async_refresh()
+        await coordinator.async_refresh()
+
+    assert coordinator.last_update_success is False

@@ -22,16 +22,16 @@ from .api import (
     CannotConnectError as ApiCannotConnect,
     InvalidAuthError as ApiInvalidAuth,
 )
-from .const import CONF_USE_SSL, DOMAIN
+from .const import CONF_USE_SSL, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): str,
+        vol.Optional(CONF_NAME, default="LibreTranslate"): str,
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT): int,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
         vol.Optional(CONF_USE_SSL, default=False): bool,
         vol.Optional(CONF_API_KEY, default=""): str,
     }
@@ -119,7 +119,9 @@ class ArgosTranslateConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
+            ),
             errors=errors,
         )
 

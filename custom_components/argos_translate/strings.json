@@ -21,13 +21,13 @@
       }
     },
     "error": {
-      "cannot_connect": "Cannot connect to LibreTranslate server",
-      "invalid_auth": "Invalid API key",
-      "no_languages": "Server has no language models installed",
-      "unknown": "Unexpected error"
+      "cannot_connect": "Cannot connect to LibreTranslate server. Check the host, port, and that the server is running.",
+      "invalid_auth": "Invalid API key. Check your API key or leave blank if authentication is not required.",
+      "no_languages": "Connected to server but no language models are installed. Install at least one language pair in LibreTranslate.",
+      "unknown": "Unexpected error connecting to the server. Check Home Assistant logs for details."
     },
     "abort": {
-      "already_configured": "This LibreTranslate server is already configured"
+      "already_configured": "A LibreTranslate server at this host and port is already configured"
     }
   },
   "options": {
@@ -49,10 +49,10 @@
       }
     },
     "error": {
-      "cannot_connect": "Cannot connect to LibreTranslate server",
-      "invalid_auth": "Invalid API key",
-      "no_languages": "Server has no language models installed",
-      "unknown": "Unexpected error"
+      "cannot_connect": "Cannot connect to LibreTranslate server. Check the host, port, and that the server is running.",
+      "invalid_auth": "Invalid API key. Check your API key or leave blank if authentication is not required.",
+      "no_languages": "Connected to server but no language models are installed. Install at least one language pair in LibreTranslate.",
+      "unknown": "Unexpected error connecting to the server. Check Home Assistant logs for details."
     }
   },
   "services": {
