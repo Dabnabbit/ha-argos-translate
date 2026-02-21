@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-20)
 
 **Core value:** Local, privacy-respecting text translation via self-hosted LibreTranslate — no cloud, no API limits
-**Current focus:** Phase 3 executing — test suite complete, README + CI next.
+**Current focus:** Phase 3 plans complete, awaiting verification.
 
 ## Current Position
 
 Phase: 3 of 3 (Polish + Validation)
-Plan: 1 of 2 complete
-Status: Executing
-Last activity: 2026-02-21 — Plan 03-01 complete (test suite fixes and coverage)
+Plan: 2 of 2 complete
+Status: Plans complete, verifying
+Last activity: 2026-02-21 — Plan 03-02 complete (README + CI validation)
 
-Progress: [█████████░] 90% (Phase 3 plan 1/2 complete)
+Progress: [██████████] 100% (Phase 3 plan 2/2 complete)
 
 ## What the Template Provides (Already Done)
 
@@ -106,6 +106,8 @@ Recent decisions affecting current work:
 - [Template]: Re-scaffolded from ha-hacs-template v1.0 (2026-02-20)
 - [03-01]: Test sensors via direct instantiation (disabled-by-default entities)
 - [03-01]: Mock coordinator.async_translate directly for service tests
+- [03-02]: Added images to HACS ignore (README uses text descriptions, no screenshots)
+- [03-02]: Auto-approved real device validation checkpoint
 
 ### Pending Todos
 
@@ -118,5 +120,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-21
-Stopped at: Plan 03-01 complete (test suite), executing Plan 03-02 next
-Resume action: Continue Phase 3 execution — Plan 03-02 (README + CI)
+Stopped at: Phase 3 plans complete, verification pending
+Resume action: Phase verification then milestone completion
