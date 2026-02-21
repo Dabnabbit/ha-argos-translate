@@ -5,15 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-21)
 
 **Core value:** Local, privacy-respecting text translation via self-hosted LibreTranslate — no cloud, no API limits
-**Current focus:** v1.0 shipped. Planning next milestone.
+**Current focus:** v1.1 Enhancement — deploy, stabilize, add auto-detect + options flow + card polish
 
 ## Current Position
 
-Milestone: v1.0 MVP — SHIPPED 2026-02-21
-Status: Complete
-Last activity: 2026-02-21 — Milestone v1.0 archived
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-21 — Milestone v1.1 started
 
-Progress: [██████████] 100% (v1.0 complete)
+Progress: [░░░░░░░░░░] 0%
 
 ## Accumulated Context
 
@@ -32,5 +33,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-21
-Stopped at: Milestone v1.0 complete and archived
-Resume action: /gsd:new-milestone
+Stopped at: Defining v1.1 requirements
+Resume action: Continue new-milestone workflow

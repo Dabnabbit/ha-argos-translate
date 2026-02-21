@@ -31,16 +31,28 @@ Users can translate text between languages entirely on their local network — n
 
 ### Active
 
-(All v1 requirements validated)
+- [ ] Deploy to real HA instance and stabilize (manual install → HACS validation)
+- [ ] Auto-detect source language via /detect endpoint
+- [ ] Options flow to reconfigure host/port/API key without removing integration
+- [ ] Card polish — theming, accessibility, error states, mobile responsiveness
 
 ### Out of Scope
 
 - Argos Translate library bundled directly (requires separate server) — too complex for HA integration, LibreTranslate Docker container is the deployment model
-- Auto-detect source language — LibreTranslate API supports it but adds complexity; explicit selection first
-- Translation history/memory — deferred to v2
-- Batch translation — deferred to v2
+- Translation history/memory — deferred to future
+- Batch translation — deferred to future
 - Speech-to-text-to-translate pipeline — future integration with Whisper
 - Language package management from HA — manage via LibreTranslate admin UI
+
+## Current Milestone: v1.1 Enhancement
+
+**Goal:** Deploy v1.0 to real hardware, stabilize through real-world testing, then add auto-detect language, options flow, and card polish.
+
+**Target features:**
+- Deploy + stabilize on real HA instance (manual install, then HACS)
+- Auto-detect source language via LibreTranslate /detect endpoint
+- Options flow for reconfiguring credentials without re-adding
+- Card UX improvements (theming, accessibility, error states, mobile)
 
 ## Current State
 
@@ -81,4 +93,4 @@ Tech stack: Python (HA integration), JavaScript/LitElement (Lovelace card), aioh
 | Text descriptions only (no screenshots) | Simpler maintenance, HACS images check ignored | Validated — Phase 3 |
 
 ---
-*Last updated: 2026-02-21 after v1.0 milestone*
+*Last updated: 2026-02-21 after v1.1 milestone start*
