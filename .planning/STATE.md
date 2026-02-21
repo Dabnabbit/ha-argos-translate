@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-20)
 
 **Core value:** Local, privacy-respecting text translation via self-hosted LibreTranslate — no cloud, no API limits
-**Current focus:** Phase 2 complete. Ready to discuss/plan Phase 3.
+**Current focus:** Phase 3 executing — test suite complete, README + CI next.
 
 ## Current Position
 
 Phase: 3 of 3 (Polish + Validation)
-Plan: Not started
-Status: Ready to discuss
-Last activity: 2026-02-20 — Phase 2 complete (translate service, Lovelace card)
+Plan: 1 of 2 complete
+Status: Executing
+Last activity: 2026-02-21 — Plan 03-01 complete (test suite fixes and coverage)
 
-Progress: [████████░░] 80% (Phase 2 of 3 complete)
+Progress: [█████████░] 90% (Phase 3 plan 1/2 complete)
 
 ## What the Template Provides (Already Done)
 
@@ -104,6 +104,8 @@ Recent decisions affecting current work:
 - [Init]: Card uses callService with returnResponse:true (requires HA 2024.1+)
 - [Init]: 30-second timeout for translate calls (slow hardware)
 - [Template]: Re-scaffolded from ha-hacs-template v1.0 (2026-02-20)
+- [03-01]: Test sensors via direct instantiation (disabled-by-default entities)
+- [03-01]: Mock coordinator.async_translate directly for service tests
 
 ### Pending Todos
 
@@ -115,6 +117,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-20
-Stopped at: Phase 2 complete, verified, ready for Phase 3
-Resume action: /gsd:discuss-phase 3 (no CONTEXT.md exists for Phase 3 yet)
+Last session: 2026-02-21
+Stopped at: Plan 03-01 complete (test suite), executing Plan 03-02 next
+Resume action: Continue Phase 3 execution — Plan 03-02 (README + CI)
