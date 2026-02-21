@@ -67,9 +67,11 @@ Plans:
   6. Swap button, loading spinner, and status indicator work
   7. Visual card editor works
 
+**Plans:** 2 plans
+
 Plans:
-- [ ] 02-01: Implement translate service with SupportsResponse.ONLY
-- [ ] 02-02: Build Lovelace card with translation UI and editor
+- [ ] 02-01-PLAN.md — Translate service: const.py, services.py, services.yaml, sensor.py, strings.json, translations/en.json
+- [ ] 02-02-PLAN.md — Lovelace card: frontend/argos_translate-card.js (translation UI + editor)
 
 ### Phase 3: Polish + Validation
 **Goal**: Integration passes all CI checks and is ready for HACS distribution
