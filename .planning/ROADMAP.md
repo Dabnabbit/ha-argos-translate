@@ -21,7 +21,7 @@ The following requirements are satisfied by the template overlay and do not need
 ## Phases
 
 - [x] **Phase 1: API Client + Data Layer** — LibreTranslate API client, coordinator, config flow, sensors (completed 2026-02-21)
-- [ ] **Phase 2: Translation Service + Card** — Translate service, Lovelace card with language UI
+- [x] **Phase 2: Translation Service + Card** — Translate service, Lovelace card with language UI (completed 2026-02-21)
 - [ ] **Phase 3: Polish + Validation** — End-to-end testing, CI validation, documentation
 
 ## Phase Details
@@ -67,7 +67,7 @@ Plans:
   6. Swap button, loading spinner, and status indicator work
   7. Visual card editor works
 
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 02-01-PLAN.md — Translate service: const.py, services.py, services.yaml, sensor.py, strings.json, translations/en.json
@@ -97,5 +97,5 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. API Client + Data Layer | 0/2 | Complete    | 2026-02-21 |
-| 2. Translation Service + Card | 0/2 | Not started | - |
+| 2. Translation Service + Card | 0/2 | Complete    | 2026-02-21 |
 | 3. Polish + Validation | 0/1 | Not started | - |
