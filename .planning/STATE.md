@@ -5,16 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-02-21)
 
 **Core value:** Local, privacy-respecting text translation via self-hosted LibreTranslate — no cloud, no API limits
-**Current focus:** All phases complete. Milestone v1.0 ready.
+**Current focus:** v1.0 shipped. Planning next milestone.
 
 ## Current Position
 
-Phase: 3 of 3 (Polish + Validation) — COMPLETE
-Plan: 2 of 2 complete
-Status: Milestone v1.0 complete
-Last activity: 2026-02-21 — All 3 phases complete, verification passed
+Milestone: v1.0 MVP — SHIPPED 2026-02-21
+Status: Complete
+Last activity: 2026-02-21 — Milestone v1.0 archived
 
-Progress: [██████████] 100% (All 3 phases complete)
+Progress: [██████████] 100% (v1.0 complete)
 
 ## Accumulated Context
 
@@ -33,5 +32,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-21
-Stopped at: Milestone v1.0 complete, all 3 phases finished
-Resume action: /gsd:complete-milestone v1.0
+Stopped at: Milestone v1.0 complete and archived
+Resume action: /gsd:new-milestone

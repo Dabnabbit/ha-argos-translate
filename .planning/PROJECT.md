@@ -42,6 +42,12 @@ Users can translate text between languages entirely on their local network — n
 - Speech-to-text-to-translate pipeline — future integration with Whisper
 - Language package management from HA — manage via LibreTranslate admin UI
 
+## Current State
+
+Shipped v1.0 with 2,052 LOC (Python + JS + JSON + YAML).
+Tech stack: Python (HA integration), JavaScript/LitElement (Lovelace card), aiohttp (API client).
+3 phases, 6 plans, 13 tasks completed in 3 days.
+
 ## Context
 
 - **Homelab**: LibreTranslate already running on QNAP at port 5500 (mapped from internal 5000)
@@ -49,9 +55,8 @@ Users can translate text between languages entirely on their local network — n
 - **LibreTranslate API**: Simple REST API — GET /languages, POST /translate, GET /detect
 - **Argos Translate**: The underlying engine; LibreTranslate is the web server wrapping it
 - **HA ecosystem gap**: No existing local-only translation integration for HA — Whisper (STT) and Piper (TTS) exist but translation is missing
-- **HACS template**: Re-scaffolded from ha-hacs-template v1.0 via `copier copy` (2026-02-20). Template provides correct HA 2025.7+ patterns, CI, tests, and service framework. All files need LibreTranslate-specific customization.
+- **HACS template**: Re-scaffolded from ha-hacs-template v1.0 via `copier copy` (2026-02-20). Template provides correct HA 2025.7+ patterns, CI, tests, and service framework.
 - **Server runs as UID 1032**: Known quirk, doesn't affect API access
-- **Future**: Could replace LibreTranslate with a custom FastAPI wrapper (ha-argos-translate project idea from homelab notes) but this integration works with existing LibreTranslate
 - **Copier answers**: `.copier-answers.yml` tracks template version (v1.0) and variables; `copier update` pulls future template improvements
 
 ## Constraints
@@ -76,4 +81,4 @@ Users can translate text between languages entirely on their local network — n
 | Text descriptions only (no screenshots) | Simpler maintenance, HACS images check ignored | Validated — Phase 3 |
 
 ---
-*Last updated: 2026-02-21 after Phase 3 (v1.0 milestone complete)*
+*Last updated: 2026-02-21 after v1.0 milestone*
