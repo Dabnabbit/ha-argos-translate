@@ -13,16 +13,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN, FRONTEND_SCRIPT_URL
-from .coordinator import TemplateCoordinator
-
-
+from .coordinator import ArgosCoordinator
 from .services import async_register_services
-
-
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
@@ -30,13 +26,10 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 class ArgosTranslateData:
     """Data for the Argos Translate integration."""
 
-    coordinator: TemplateCoordinator
+    coordinator: ArgosCoordinator
 
 
-
-type ArgosTranslateConfigEntry = ConfigEntry[
-    ArgosTranslateData
-]
+type ArgosTranslateConfigEntry = ConfigEntry[ArgosTranslateData]
 
 
 async def _async_register_lovelace_resource(lovelace) -> None:
@@ -75,33 +68,36 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
             if lovelace.resources.loaded:
                 await _async_register_lovelace_resource(lovelace)
             else:
+
                 async def _on_lovelace_loaded(_event=None):
                     await _async_register_lovelace_resource(lovelace)
-                hass.bus.async_listen_once("lovelace_updated", _on_lovelace_loaded)
+
+                hass.bus.async_listen_once(
+                    "lovelace_updated", _on_lovelace_loaded
+                )
     except Exception:  # noqa: BLE001
         _LOGGER.debug("Could not auto-register Lovelace resource; add manually")
-
-
 
     async_register_services(hass)
 
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ArgosTranslateConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ArgosTranslateConfigEntry
+) -> bool:
     """Set up Argos Translate from a config entry."""
-    coordinator = TemplateCoordinator(hass, entry)
+    coordinator = ArgosCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 
-
-
     entry.runtime_data = ArgosTranslateData(coordinator=coordinator)
-
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ArgosTranslateConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: ArgosTranslateConfigEntry
+) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
