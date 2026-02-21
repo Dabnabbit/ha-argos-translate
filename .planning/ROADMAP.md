@@ -47,8 +47,8 @@ The following requirements are satisfied by the template overlay and do not need
 **Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 01-01-PLAN.md — API foundation: customize const.py, api.py, coordinator.py for LibreTranslate
-- [ ] 01-02-PLAN.md — Config flow + sensors: config_flow.py, binary_sensor.py, sensor.py, strings, __init__.py
+- [x] 01-01-PLAN.md — API foundation: customize const.py, api.py, coordinator.py for LibreTranslate
+- [x] 01-02-PLAN.md — Config flow + sensors: config_flow.py, binary_sensor.py, sensor.py, strings, __init__.py
 
 ### Phase 2: Translation Service + Card
 **Goal**: Users can translate text via service call and Lovelace card
@@ -70,8 +70,8 @@ Plans:
 **Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 02-01-PLAN.md — Translate service: const.py, services.py, services.yaml, sensor.py, strings.json, translations/en.json
-- [ ] 02-02-PLAN.md — Lovelace card: frontend/argos_translate-card.js (translation UI + editor)
+- [x] 02-01-PLAN.md — Translate service: const.py, services.py, services.yaml, sensor.py, strings.json, translations/en.json
+- [x] 02-02-PLAN.md — Lovelace card: frontend/argos_translate-card.js (translation UI + editor)
 
 ### Phase 3: Polish + Validation
 **Goal**: Integration passes all CI checks and is ready for HACS distribution
@@ -86,11 +86,11 @@ Plans:
   3. All tests pass
   4. README documents installation, configuration, card usage, service examples
 
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 03-01-PLAN.md — Fix existing tests and add comprehensive test coverage (services, sensors)
-- [ ] 03-02-PLAN.md — Write README documentation, validate CI, real-device testing checkpoint
+- [x] 03-01-PLAN.md — Fix existing tests and add comprehensive test coverage (services, sensors)
+- [x] 03-02-PLAN.md — Write README documentation, validate CI, real-device testing checkpoint
 
 ## Progress
 
@@ -99,6 +99,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. API Client + Data Layer | 0/2 | Complete    | 2026-02-21 |
-| 2. Translation Service + Card | 0/2 | Complete    | 2026-02-21 |
-| 3. Polish + Validation | 0/2 | Not started | - |
+| 1. API Client + Data Layer | 2/2 | Complete    | 2026-02-21 |
+| 2. Translation Service + Card | 2/2 | Complete    | 2026-02-21 |
+| 3. Polish + Validation | 2/2 | Complete    | 2026-02-21 |
