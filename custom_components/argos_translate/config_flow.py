@@ -151,6 +151,14 @@ class OptionsFlowHandler(OptionsFlow):
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, data=merged
                 )
+                # Reload so coordinator rebuilds with new connection credentials.
+                # Triggers: async_unload_entry -> async_setup_entry -> new coordinator
+                # with new ArgosTranslateApiClient from updated entry.data.
+                # Note: credentials stored in entry.data (not entry.options) because
+                # ArgosCoordinator.__init__ reads entry.data exclusively.
+                await self.hass.config_entries.async_reload(
+                    self.config_entry.entry_id
+                )
                 return self.async_create_entry(data={})
 
         return self.async_show_form(
