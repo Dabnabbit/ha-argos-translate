@@ -1,80 +1,41 @@
 # Argos Translate
 
-A Home Assistant HACS integration for local text translation using [LibreTranslate](https://libretranslate.com/) / [Argos Translate](https://github.com/argosopentech/argos-translate). All translations happen on your local network - no cloud services needed.
+Local text translation via LibreTranslate for Home Assistant.
 
-## Features
+[![HACS Default](https://img.shields.io/badge/HACS-Default-blue.svg)](https://github.com/hacs/integration)
+[![HA Version](https://img.shields.io/badge/Home%20Assistant-2025.7%2B-blue.svg)](https://www.home-assistant.io/)
 
-- Translate text between 15+ languages via a local LibreTranslate server
-- `argos_translate.translate` service call for automations and scripts
-- Status and language count sensors
-- Lovelace card with language dropdowns, swap button, and translate functionality
-- Visual card editor
+## Installation via HACS
 
-## Installation
+1. Open HACS in Home Assistant
+2. Go to Integrations
+3. Search for "Argos Translate"
+4. Install and restart Home Assistant
 
-### HACS (Recommended)
+## Manual Installation
 
-1. Add this repository as a custom repository in HACS
-2. Search for "Argos Translate" and install
-3. Restart Home Assistant
-4. Add the integration via Settings > Devices & Services
-
-### Manual
-
-1. Copy `custom_components/argos_translate/` to your HA `config/custom_components/`
+1. Copy `custom_components/argos_translate/` into your HA `config/custom_components/`
 2. Restart Home Assistant
-3. Add the integration via Settings > Devices & Services
+3. Add the integration via Settings > Devices & Services > Add Integration
 
-## Prerequisites
+## Card Usage
 
-You need a running LibreTranslate server. The easiest way:
+Add the Lovelace card to your dashboard:
 
-```bash
-docker run -d -p 5000:5000 libretranslate/libretranslate
+```yaml
+type: custom:argos-translate-card
+entity: sensor.example
+header: "Argos Translate"
 ```
 
 ## Configuration
 
-The config flow asks for:
+Configure the integration via Settings > Devices & Services > Add Integration > Argos Translate.
 
-- **Host**: LibreTranslate server hostname/IP (default: `localhost`)
-- **Port**: Server port (default: `5000`)
-- **API Key**: Optional, if your server requires authentication
+## Links
 
-## Service
-
-### `argos_translate.translate`
-
-Translate text between languages. Returns response data.
-
-| Parameter | Description | Example |
-|-----------|-------------|---------|
-| `text` | Text to translate | `"Hello world"` |
-| `source` | Source language code | `"en"` |
-| `target` | Target language code | `"es"` |
-
-**Response:**
-```yaml
-translated_text: "Hola mundo"
-```
-
-## Sensors
-
-| Sensor | Description |
-|--------|-------------|
-| `sensor.argos_translate_*_status` | Server status (online/error) |
-| `sensor.argos_translate_*_available_languages` | Number of available languages |
-
-## Card
-
-The Argos Translate card provides:
-
-- **Language dropdowns**: Select source and target languages
-- **Swap button**: Quickly reverse the translation direction
-- **Input area**: Enter text to translate
-- **Translate button**: Trigger translation via the service call
-- **Output area**: Read-only translated result
-- **Status bar**: Server status and language count
+- [Documentation](https://github.com/Dabentz/ha-argos-translate)
+- [Issues](https://github.com/Dabentz/ha-argos-translate/issues)
 
 ## License
 

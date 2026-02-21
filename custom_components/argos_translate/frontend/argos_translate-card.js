@@ -1,8 +1,8 @@
 /**
  * Argos Translate Card
  *
- * A Lovelace card for translating text via a local
- * LibreTranslate / Argos Translate server.
+ * A template Lovelace card for Home Assistant.
+ * Replace this with your project-specific card implementation.
  */
 
 const LitElement = customElements.get("hui-masonry-view")
@@ -15,7 +15,7 @@ const CARD_VERSION = "0.1.0";
 
 console.info(
   `%c ARGOS-TRANSLATE-CARD %c v${CARD_VERSION} `,
-  "color: cyan; font-weight: bold; background: black",
+  "color: orange; font-weight: bold; background: black",
   "color: white; font-weight: bold; background: dimgray"
 );
 
@@ -24,323 +24,134 @@ class ArgosTranslateCard extends LitElement {
     return {
       hass: { type: Object },
       config: { type: Object },
-      _sourceLang: { type: String },
-      _targetLang: { type: String },
-      _inputText: { type: String },
-      _outputText: { type: String },
-      _translating: { type: Boolean },
-      _languages: { type: Array },
     };
-  }
-
-  constructor() {
-    super();
-    this._sourceLang = "en";
-    this._targetLang = "es";
-    this._inputText = "";
-    this._outputText = "";
-    this._translating = false;
-    this._languages = [];
   }
 
   static getConfigElement() {
     return document.createElement("argos-translate-card-editor");
   }
 
-  static getStubConfig() {
+  static getStubConfig(hass) {
+    if (!hass) {
+      return {
+        header: "Argos Translate",
+        entity: "",
+      };
+    }
+    const entities = Object.keys(hass.states);
+    const sensorEntity = entities.find((e) => e.startsWith("sensor."));
     return {
-      header: "Translate",
+      header: "Argos Translate",
+      entity: sensorEntity || "",
     };
   }
 
   setConfig(config) {
-    if (!config) throw new Error("Invalid configuration");
-    this.config = { header: "Translate", ...config };
+    if (!config) {
+      throw new Error("Invalid configuration");
+    }
+    this.config = {
+      header: "Argos Translate",
+      ...config,
+    };
   }
 
   getCardSize() {
-    return 5;
+    return 3;
   }
 
-  updated(changedProperties) {
-    if (changedProperties.has("hass") && this.hass) {
-      this._loadLanguages();
-    }
-  }
-
-  _loadLanguages() {
-    // Try to get languages from the status sensor's attributes
-    // or use a default set
-    if (this._languages.length > 0) return;
-
-    this._languages = [
-      { code: "en", name: "English" },
-      { code: "es", name: "Spanish" },
-      { code: "fr", name: "French" },
-      { code: "de", name: "German" },
-      { code: "it", name: "Italian" },
-      { code: "pt", name: "Portuguese" },
-      { code: "ru", name: "Russian" },
-      { code: "zh", name: "Chinese" },
-      { code: "ja", name: "Japanese" },
-      { code: "ko", name: "Korean" },
-      { code: "ar", name: "Arabic" },
-      { code: "hi", name: "Hindi" },
-      { code: "nl", name: "Dutch" },
-      { code: "pl", name: "Polish" },
-      { code: "tr", name: "Turkish" },
-      { code: "uk", name: "Ukrainian" },
-    ];
+  getGridOptions() {
+    return {
+      rows: 3,
+      columns: 6,
+      min_rows: 2,
+      min_columns: 3,
+    };
   }
 
   render() {
-    if (!this.hass || !this.config) return html``;
+    if (!this.hass || !this.config) {
+      return html`
+        <ha-card>
+          <div class="card-content loading">
+            <ha-spinner size="small"></ha-spinner>
+          </div>
+        </ha-card>
+      `;
+    }
+
+    const entityId = this.config.entity;
+
+    if (!entityId) {
+      return html`
+        <ha-card header="${this.config.header || ""}">
+          <div class="card-content">
+            <div class="empty">No entity configured</div>
+          </div>
+        </ha-card>
+      `;
+    }
+
+    const stateObj = this.hass.states[entityId];
+
+    if (!stateObj) {
+      return html`
+        <ha-card header="${this.config.header || ""}">
+          <div class="card-content">
+            <ha-alert alert-type="error">
+              Entity not available: ${entityId}
+            </ha-alert>
+          </div>
+        </ha-card>
+      `;
+    }
 
     return html`
-      <ha-card header="${this.config.header}">
+      <ha-card header="${this.config.header || ""}">
         <div class="card-content">
-          <div class="lang-row">
-            <select
-              class="lang-select"
-              .value="${this._sourceLang}"
-              @change="${this._sourceChanged}"
-            >
-              ${this._languages.map(
-                (l) =>
-                  html`<option
-                    value="${l.code}"
-                    ?selected="${l.code === this._sourceLang}"
-                  >
-                    ${l.name}
-                  </option>`
-              )}
-            </select>
-
-            <button class="swap-btn" @click="${this._swapLanguages}">
-              &#8646;
-            </button>
-
-            <select
-              class="lang-select"
-              .value="${this._targetLang}"
-              @change="${this._targetChanged}"
-            >
-              ${this._languages.map(
-                (l) =>
-                  html`<option
-                    value="${l.code}"
-                    ?selected="${l.code === this._targetLang}"
-                  >
-                    ${l.name}
-                  </option>`
-              )}
-            </select>
+          <div class="state">
+            <span class="label">${stateObj.attributes.friendly_name || entityId}</span>
+            <span class="value">${stateObj.state}</span>
           </div>
-
-          <textarea
-            class="input-area"
-            placeholder="Enter text to translate..."
-            .value="${this._inputText}"
-            @input="${this._inputChanged}"
-            rows="4"
-          ></textarea>
-
-          <button
-            class="translate-btn"
-            @click="${this._doTranslate}"
-            ?disabled="${this._translating || !this._inputText.trim()}"
-          >
-            ${this._translating ? "Translating..." : "Translate"}
-          </button>
-
-          <textarea
-            class="output-area"
-            placeholder="Translation will appear here..."
-            .value="${this._outputText}"
-            readonly
-            rows="4"
-          ></textarea>
-
-          ${this._renderStatus()}
         </div>
       </ha-card>
     `;
   }
 
-  _renderStatus() {
-    const statusEntity = Object.keys(this.hass.states).find(
-      (e) => e.startsWith("sensor.argos_translate") && e.endsWith("_status")
-    );
-    const langEntity = Object.keys(this.hass.states).find(
-      (e) =>
-        e.startsWith("sensor.argos_translate") &&
-        e.endsWith("_available_languages")
-    );
-
-    const status = statusEntity
-      ? this.hass.states[statusEntity].state
-      : "unknown";
-    const langCount = langEntity
-      ? this.hass.states[langEntity].state
-      : "?";
-
-    return html`
-      <div class="status-bar">
-        <span class="status-dot ${status === "online" ? "online" : "offline"}">
-        </span>
-        <span class="status-text">${status}</span>
-        <span class="lang-count">${langCount} languages</span>
-      </div>
-    `;
-  }
-
-  _sourceChanged(ev) {
-    this._sourceLang = ev.target.value;
-  }
-
-  _targetChanged(ev) {
-    this._targetLang = ev.target.value;
-  }
-
-  _inputChanged(ev) {
-    this._inputText = ev.target.value;
-  }
-
-  _swapLanguages() {
-    const tmp = this._sourceLang;
-    this._sourceLang = this._targetLang;
-    this._targetLang = tmp;
-
-    // Also swap text
-    if (this._outputText) {
-      const tmpText = this._inputText;
-      this._inputText = this._outputText;
-      this._outputText = tmpText;
-    }
-  }
-
-  async _doTranslate() {
-    if (!this._inputText.trim()) return;
-    this._translating = true;
-    this._outputText = "";
-
-    try {
-      const result = await this.hass.callService(
-        "argos_translate",
-        "translate",
-        {
-          text: this._inputText,
-          source: this._sourceLang,
-          target: this._targetLang,
-        },
-        undefined,
-        true // return_response
-      );
-
-      if (result?.response?.translated_text) {
-        this._outputText = result.response.translated_text;
-      } else {
-        this._outputText = "[No translation returned]";
-      }
-    } catch (err) {
-      this._outputText = `[Error: ${err.message || err}]`;
-    } finally {
-      this._translating = false;
-    }
-  }
-
   static get styles() {
     return css`
-      ha-card {
-        padding: 16px;
+      :host {
+        display: block;
       }
       .card-content {
         padding: 0 16px 16px;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
       }
-      .lang-row {
+      .loading {
         display: flex;
-        gap: 8px;
+        justify-content: center;
         align-items: center;
+        padding: 32px 16px;
       }
-      .lang-select {
-        flex: 1;
-        padding: 8px;
-        border: 1px solid var(--divider-color, #e0e0e0);
-        border-radius: 4px;
-        background: var(--card-background-color);
-        color: var(--primary-text-color);
-        font-size: 14px;
+      .state {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
       }
-      .swap-btn {
-        padding: 8px 12px;
-        border: 1px solid var(--divider-color, #e0e0e0);
-        border-radius: 4px;
-        background: transparent;
-        color: var(--primary-color);
-        cursor: pointer;
-        font-size: 18px;
-        line-height: 1;
-      }
-      .swap-btn:hover {
-        background: var(--secondary-background-color);
-      }
-      textarea {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid var(--divider-color, #e0e0e0);
-        border-radius: 4px;
-        background: var(--card-background-color);
-        color: var(--primary-text-color);
-        font-family: inherit;
-        font-size: 14px;
-        resize: vertical;
-        box-sizing: border-box;
-      }
-      textarea:focus {
-        outline: none;
-        border-color: var(--primary-color);
-      }
-      .output-area {
-        background: var(--secondary-background-color);
-      }
-      .translate-btn {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 4px;
-        background: var(--primary-color);
-        color: var(--text-primary-color, white);
-        cursor: pointer;
-        font-size: 14px;
+      .label {
         font-weight: 500;
-        align-self: center;
+        color: var(--primary-text-color);
       }
-      .translate-btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
+      .value {
+        font-size: 1.2em;
+        font-weight: bold;
+        color: var(--primary-color);
       }
-      .status-bar {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 12px;
+      .empty {
         color: var(--secondary-text-color);
-        padding-top: 8px;
-        border-top: 1px solid var(--divider-color, #e0e0e0);
-      }
-      .status-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: var(--error-color, red);
-      }
-      .status-dot.online {
-        background: var(--success-color, green);
-      }
-      .lang-count {
-        margin-left: auto;
+        font-style: italic;
+        text-align: center;
+        padding: 16px;
       }
     `;
   }
@@ -362,7 +173,9 @@ class ArgosTranslateCardEditor extends LitElement {
   }
 
   render() {
-    if (!this.hass || !this.config) return html``;
+    if (!this.hass || !this.config) {
+      return html``;
+    }
 
     return html`
       <div class="editor">
@@ -371,12 +184,23 @@ class ArgosTranslateCardEditor extends LitElement {
           .value="${this.config.header || ""}"
           @input="${this._headerChanged}"
         ></ha-textfield>
+        <ha-entity-picker
+          label="Entity"
+          .hass="${this.hass}"
+          .value="${this.config.entity || ""}"
+          @value-changed="${this._entityChanged}"
+          allow-custom-entity
+        ></ha-entity-picker>
       </div>
     `;
   }
 
   _headerChanged(ev) {
     this._updateConfig("header", ev.target.value);
+  }
+
+  _entityChanged(ev) {
+    this._updateConfig("entity", ev.detail.value);
   }
 
   _updateConfig(key, value) {
@@ -402,13 +226,23 @@ class ArgosTranslateCardEditor extends LitElement {
   }
 }
 
-customElements.define("argos-translate-card", ArgosTranslateCard);
-customElements.define("argos-translate-card-editor", ArgosTranslateCardEditor);
+if (!customElements.get("argos-translate-card")) {
+  customElements.define(
+    "argos-translate-card",
+    ArgosTranslateCard
+  );
+}
+if (!customElements.get("argos-translate-card-editor")) {
+  customElements.define(
+    "argos-translate-card-editor",
+    ArgosTranslateCardEditor
+  );
+}
 
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "argos-translate-card",
   name: "Argos Translate Card",
-  description: "Translate text using a local translation server",
+  description: "Local text translation via LibreTranslate for Home Assistant.",
   preview: true,
 });

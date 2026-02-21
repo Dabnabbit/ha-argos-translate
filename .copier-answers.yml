@@ -1,0 +1,16 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: v1.0
+_src_path: /home/dab/Projects/ha-hacs-template
+author_name: Dabentz
+documentation_url: https://github.com/Dabentz/ha-argos-translate
+integration_type: service
+iot_class: local_polling
+issue_tracker_url: https://github.com/Dabentz/ha-argos-translate/issues
+project_description: Local text translation via LibreTranslate for Home Assistant.
+project_domain: argos_translate
+project_name: Argos Translate
+use_multi_step_config_flow: false
+use_secondary_coordinator: false
+use_services: true
+use_websocket: false
+version: 0.1.0

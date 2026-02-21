@@ -2,21 +2,34 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect to Translation Server",
-        "description": "Enter the connection details for your LibreTranslate / Argos Translate server.",
+        "title": "Connect to Service",
+        "description": "Enter the connection details for your service.",
         "data": {
           "host": "Host",
-          "port": "Port",
-          "api_key": "API Key (optional)"
+          "port": "Port"
+          ,"api_key": "API Key"
         }
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect to translation server",
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
       "unknown": "Unexpected error"
     },
     "abort": {
-      "already_configured": "Already configured"
+      "already_configured": "Service is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Update Service Settings",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "api_key": "API Key"
+        }
+      }
     }
   }
 }

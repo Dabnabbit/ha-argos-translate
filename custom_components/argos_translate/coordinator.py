@@ -6,19 +6,20 @@ import logging
 from datetime import timedelta
 from typing import Any
 
-import aiohttp
-
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_API_KEY, CONF_HOST, CONF_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .api import ApiClient, CannotConnectError
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class ArgosTranslateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Coordinator to manage Argos Translate / LibreTranslate API."""
+class TemplateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Coordinator to manage data fetching from the service."""
 
     config_entry: ConfigEntry
 
@@ -31,53 +32,17 @@ class ArgosTranslateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
         self.config_entry = entry
-        self._host = entry.data[CONF_HOST]
-        self._port = entry.data[CONF_PORT]
-        self._api_key = entry.data.get(CONF_API_KEY, "")
-        self._base_url = f"http://{self._host}:{self._port}"
+        session = async_get_clientsession(hass)
+        self.client = ApiClient(
+            host=entry.data[CONF_HOST],
+            port=entry.data[CONF_PORT],
+            api_key=entry.data[CONF_API_KEY],
+            session=session,
+        )
 
     async def _async_update_data(self) -> dict[str, Any]:
-        """Fetch available languages from the translation server."""
+        """Fetch data from the service."""
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    f"{self._base_url}/languages",
-                    timeout=aiohttp.ClientTimeout(total=10),
-                ) as resp:
-                    if resp.status == 200:
-                        languages = await resp.json()
-                        return {
-                            "languages": languages,
-                            "language_count": len(languages),
-                            "status": "online",
-                        }
-                    return {"languages": [], "language_count": 0, "status": "error"}
-        except Exception as err:
-            raise UpdateFailed(f"Error communicating with Argos Translate: {err}") from err
-
-    async def async_translate(self, text: str, source: str, target: str) -> str:
-        """Translate text using the API."""
-        try:
-            payload: dict[str, Any] = {
-                "q": text,
-                "source": source,
-                "target": target,
-                "format": "text",
-            }
-            if self._api_key:
-                payload["api_key"] = self._api_key
-
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                    f"{self._base_url}/translate",
-                    json=payload,
-                    timeout=aiohttp.ClientTimeout(total=30),
-                ) as resp:
-                    if resp.status == 200:
-                        data = await resp.json()
-                        return data.get("translatedText", "")
-                    _LOGGER.error("Translation failed with status %s", resp.status)
-                    return f"[Translation error: HTTP {resp.status}]"
-        except Exception as err:
-            _LOGGER.error("Translation request failed: %s", err)
-            return f"[Translation error: {err}]"
+            return await self.client.async_get_data()
+        except CannotConnectError as err:
+            raise UpdateFailed(f"Error communicating with API: {err}") from err

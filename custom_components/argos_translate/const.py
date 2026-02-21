@@ -2,22 +2,9 @@
 
 DOMAIN = "argos_translate"
 
-# Config keys
-CONF_HOST = "host"
-CONF_PORT = "port"
-CONF_API_KEY = "api_key"
-CONF_SOURCE_LANG = "source_lang"
-CONF_TARGET_LANG = "target_lang"
+DEFAULT_PORT = 8080
+DEFAULT_SCAN_INTERVAL = 30
+DEFAULT_SECONDARY_SCAN_INTERVAL = 300
+DEFAULT_TIMEOUT = 30
 
-# Defaults
-DEFAULT_HOST = "localhost"
-DEFAULT_PORT = 5000
-DEFAULT_SCAN_INTERVAL = 60
-
-# Service
-SERVICE_TRANSLATE = "translate"
-ATTR_TEXT = "text"
-ATTR_SOURCE = "source"
-ATTR_TARGET = "target"
-
-FRONTEND_SCRIPT_URL = f"/hacsfiles/{DOMAIN}/{DOMAIN}-card.js"
+FRONTEND_SCRIPT_URL = f"/{DOMAIN}/{DOMAIN}-card.js"

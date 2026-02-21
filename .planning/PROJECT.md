@@ -49,9 +49,10 @@ Users can translate text between languages entirely on their local network — n
 - **LibreTranslate API**: Simple REST API — GET /languages, POST /translate, GET /detect
 - **Argos Translate**: The underlying engine; LibreTranslate is the web server wrapping it
 - **HA ecosystem gap**: No existing local-only translation integration for HA — Whisper (STT) and Piper (TTS) exist but translation is missing
-- **HACS template**: Scaffolded from ha-hacs-template with config flow, coordinator, sensors, LitElement card
+- **HACS template**: Re-scaffolded from ha-hacs-template v1.0 via `copier copy` (2026-02-20). Template provides correct HA 2025.7+ patterns, CI, tests, and service framework. All files need LibreTranslate-specific customization.
 - **Server runs as UID 1032**: Known quirk, doesn't affect API access
 - **Future**: Could replace LibreTranslate with a custom FastAPI wrapper (ha-argos-translate project idea from homelab notes) but this integration works with existing LibreTranslate
+- **Copier answers**: `.copier-answers.yml` tracks template version (v1.0) and variables; `copier update` pulls future template improvements
 
 ## Constraints
 
@@ -72,4 +73,4 @@ Users can translate text between languages entirely on their local network — n
 | Single config entry per server | One LibreTranslate server per integration instance | — Pending |
 
 ---
-*Last updated: 2026-02-19 after initialization*
+*Last updated: 2026-02-20 after template overlay from ha-hacs-template v1.0*
