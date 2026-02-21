@@ -65,28 +65,28 @@ Deferred to future release. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| STAB-01 | — | Pending |
-| STAB-02 | — | Pending |
-| STAB-03 | — | Pending |
-| STAB-04 | — | Pending |
-| OPTS-01 | — | Pending |
-| OPTS-02 | — | Pending |
-| DTCT-01 | — | Pending |
-| DTCT-02 | — | Pending |
-| DTCT-03 | — | Pending |
-| DTCT-04 | — | Pending |
-| DTCT-05 | — | Pending |
-| DTCT-06 | — | Pending |
-| CPOL-01 | — | Pending |
-| CPOL-02 | — | Pending |
-| CPOL-03 | — | Pending |
-| CPOL-04 | — | Pending |
+| STAB-01 | Phase 6 | Pending |
+| STAB-02 | Phase 6 | Pending |
+| STAB-03 | Phase 6 | Pending |
+| STAB-04 | Phase 6 | Pending |
+| OPTS-01 | Phase 4 | Pending |
+| OPTS-02 | Phase 4 | Pending |
+| DTCT-01 | Phase 5 | Pending |
+| DTCT-02 | Phase 5 | Pending |
+| DTCT-03 | Phase 5 | Pending |
+| DTCT-04 | Phase 5 | Pending |
+| DTCT-05 | Phase 5 | Pending |
+| DTCT-06 | Phase 5 | Pending |
+| CPOL-01 | Phase 5 | Pending |
+| CPOL-02 | Phase 5 | Pending |
+| CPOL-03 | Phase 5 | Pending |
+| CPOL-04 | Phase 5 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 16 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 16
+- Mapped to phases: 16
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-21*
-*Last updated: 2026-02-21 after initial definition*
+*Last updated: 2026-02-21 after v1.1 roadmap creation*
