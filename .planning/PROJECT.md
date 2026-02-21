@@ -12,26 +12,26 @@ Users can translate text between languages entirely on their local network — n
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Config flow with host/port/API key fields and connection validation (ping /languages endpoint) — Phase 1
+- [x] DataUpdateCoordinator polling /languages endpoint for available languages and server status — Phase 1
+- [x] Status sensor (online/error) — Phase 1
+- [x] Available languages count sensor — Phase 1
+- [x] `argos_translate.translate` service call accepting text, source language, target language — Phase 2
+- [x] Service call returns translated text as response data — Phase 2
+- [x] Lovelace card with source/target language dropdowns — Phase 2
+- [x] Language swap button on card — Phase 2
+- [x] Text input area and read-only output area — Phase 2
+- [x] Translate button triggering the service call — Phase 2
+- [x] Status indicator on card (server online/offline + language count) — Phase 2
+- [x] Visual card editor — Phase 2
+- [x] HACS-compatible distribution (hacs.json, manifest.json, GitHub Actions) — Template + Phase 3
+- [x] Frontend card served via integration's static path registration — Template
+- [x] Dynamic language list populated from server (not hardcoded) — Phase 1
+- [x] Error handling for server unavailable, translation timeout, unsupported language pairs — Phases 1-2
 
 ### Active
 
-- [ ] Config flow with host/port/API key fields and connection validation (ping /languages endpoint)
-- [ ] DataUpdateCoordinator polling /languages endpoint for available languages and server status
-- [ ] Status sensor (online/error)
-- [ ] Available languages count sensor
-- [ ] `argos_translate.translate` service call accepting text, source language, target language
-- [ ] Service call returns translated text as response data
-- [ ] Lovelace card with source/target language dropdowns
-- [ ] Language swap button on card
-- [ ] Text input area and read-only output area
-- [ ] Translate button triggering the service call
-- [ ] Status indicator on card (server online/offline + language count)
-- [ ] Visual card editor
-- [ ] HACS-compatible distribution (hacs.json, manifest.json, GitHub Actions)
-- [ ] Frontend card served via integration's static path registration
-- [ ] Dynamic language list populated from server (not hardcoded)
-- [ ] Error handling for server unavailable, translation timeout, unsupported language pairs
+(All v1 requirements validated)
 
 ### Out of Scope
 
@@ -67,10 +67,13 @@ Users can translate text between languages entirely on their local network — n
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Wrap LibreTranslate API (not bundle Argos directly) | LibreTranslate is already deployed, well-maintained, and provides a clean REST API | — Pending |
-| Service call with response data | HA's SupportsResponse.ONLY pattern lets automations use translated text | — Pending |
-| Dynamic language list from server | Avoids hardcoding, adapts to whatever packages are installed | — Pending |
-| Single config entry per server | One LibreTranslate server per integration instance | — Pending |
+| Wrap LibreTranslate API (not bundle Argos directly) | LibreTranslate is already deployed, well-maintained, and provides a clean REST API | Validated — clean REST client works well |
+| Service call with response data | HA's SupportsResponse.ONLY pattern lets automations use translated text | Validated — response_variable pattern works |
+| Dynamic language list from server | Avoids hardcoding, adapts to whatever packages are installed | Validated — coordinator polls /languages |
+| Single config entry per server | One LibreTranslate server per integration instance | Validated — works for typical use case |
+| API key in POST body | LibreTranslate convention (not HTTP header) | Validated — Phase 1 |
+| Test sensors via direct instantiation | Disabled-by-default entities can't be tested through state machine | Validated — Phase 3 |
+| Text descriptions only (no screenshots) | Simpler maintenance, HACS images check ignored | Validated — Phase 3 |
 
 ---
-*Last updated: 2026-02-20 after template overlay from ha-hacs-template v1.0*
+*Last updated: 2026-02-21 after Phase 3 (v1.0 milestone complete)*
