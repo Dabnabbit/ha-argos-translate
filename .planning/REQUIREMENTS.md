@@ -16,8 +16,8 @@ Requirements for v1.1 Enhancement milestone. Each maps to roadmap phases.
 
 ### Options Flow
 
-- [ ] **OPTS-01**: User can reconfigure host, port, API key, and SSL toggle from the integration's options without removing and re-adding
-- [ ] **OPTS-02**: Options flow triggers coordinator reload so changes take effect immediately (no HA restart required)
+- [x] **OPTS-01**: User can reconfigure host, port, API key, and SSL toggle from the integration's options without removing and re-adding
+- [x] **OPTS-02**: Options flow triggers coordinator reload so changes take effect immediately (no HA restart required)
 
 ### Auto-Detect Language
 
@@ -69,8 +69,8 @@ Deferred to future release. Tracked but not in current roadmap.
 | STAB-02 | Phase 6 | Pending |
 | STAB-03 | Phase 6 | Pending |
 | STAB-04 | Phase 6 | Pending |
-| OPTS-01 | Phase 4 | Pending |
-| OPTS-02 | Phase 4 | Pending |
+| OPTS-01 | Phase 4 | Complete |
+| OPTS-02 | Phase 4 | Complete |
 | DTCT-01 | Phase 5 | Pending |
 | DTCT-02 | Phase 5 | Pending |
 | DTCT-03 | Phase 5 | Pending |
