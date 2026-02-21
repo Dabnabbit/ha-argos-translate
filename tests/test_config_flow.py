@@ -3,14 +3,18 @@
 from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.argos_translate.config_flow import CannotConnect
-from custom_components.argos_translate.const import DOMAIN
+from custom_components.argos_translate.config_flow import (
+    CannotConnect,
+    InvalidAuth,
+    NoLanguages,
+)
+from custom_components.argos_translate.const import CONF_USE_SSL, DOMAIN
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -28,8 +32,10 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
+                CONF_NAME: "My LibreTranslate",
                 CONF_HOST: "192.168.1.100",
-                CONF_PORT: 8080,
+                CONF_PORT: 5000,
+                CONF_USE_SSL: False,
                 CONF_API_KEY: "test-key",
             },
         )
@@ -37,8 +43,10 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
+        CONF_NAME: "My LibreTranslate",
         CONF_HOST: "192.168.1.100",
-        CONF_PORT: 8080,
+        CONF_PORT: 5000,
+        CONF_USE_SSL: False,
         CONF_API_KEY: "test-key",
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -58,8 +66,10 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
+                CONF_NAME: "My LibreTranslate",
                 CONF_HOST: "192.168.1.100",
-                CONF_PORT: 8080,
+                CONF_PORT: 5000,
+                CONF_USE_SSL: False,
                 CONF_API_KEY: "test-key",
             },
         )
@@ -68,14 +78,68 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+async def test_form_invalid_auth(hass: HomeAssistant) -> None:
+    """Test the config flow form — invalid auth shows error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+
+    with patch(
+        "custom_components.argos_translate.config_flow._async_validate_connection",
+        side_effect=InvalidAuth,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_NAME: "My LibreTranslate",
+                CONF_HOST: "192.168.1.100",
+                CONF_PORT: 5000,
+                CONF_USE_SSL: False,
+                CONF_API_KEY: "bad-key",
+            },
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_form_no_languages(hass: HomeAssistant) -> None:
+    """Test the config flow form — no languages shows error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+
+    with patch(
+        "custom_components.argos_translate.config_flow._async_validate_connection",
+        side_effect=NoLanguages,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_NAME: "My LibreTranslate",
+                CONF_HOST: "192.168.1.100",
+                CONF_PORT: 5000,
+                CONF_USE_SSL: False,
+                CONF_API_KEY: "",
+            },
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "no_languages"}
+
+
 async def test_form_duplicate_abort(hass: HomeAssistant) -> None:
     """Test the config flow aborts when the same host:port is already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="192.168.1.100:8080",
+        unique_id="192.168.1.100:5000",
         data={
+            CONF_NAME: "My LibreTranslate",
             CONF_HOST: "192.168.1.100",
-            CONF_PORT: 8080,
+            CONF_PORT: 5000,
+            CONF_USE_SSL: False,
             CONF_API_KEY: "existing-key",
         },
     )
@@ -93,8 +157,10 @@ async def test_form_duplicate_abort(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
+                CONF_NAME: "My LibreTranslate",
                 CONF_HOST: "192.168.1.100",
-                CONF_PORT: 8080,
+                CONF_PORT: 5000,
+                CONF_USE_SSL: False,
                 CONF_API_KEY: "test-key",
             },
         )
@@ -108,8 +174,10 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
+            CONF_NAME: "My LibreTranslate",
             CONF_HOST: "192.168.1.100",
-            CONF_PORT: 8080,
+            CONF_PORT: 5000,
+            CONF_USE_SSL: False,
             CONF_API_KEY: "old-key",
         },
     )
@@ -118,14 +186,22 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] == FlowResultType.FORM
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_HOST: "192.168.1.100",
-            CONF_PORT: 8080,
-            CONF_API_KEY: "new-key",
-        },
-    )
+    with patch(
+        "custom_components.argos_translate.config_flow._async_validate_connection",
+        return_value=None,
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "192.168.1.200",
+                CONF_PORT: 5000,
+                CONF_USE_SSL: True,
+                CONF_API_KEY: "new-key",
+            },
+        )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert entry.data[CONF_API_KEY] == "new-key"
+    assert entry.data[CONF_HOST] == "192.168.1.200"
+    assert entry.data[CONF_USE_SSL] is True
+    assert entry.data[CONF_NAME] == "My LibreTranslate"
