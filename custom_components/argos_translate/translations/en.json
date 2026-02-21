@@ -54,5 +54,36 @@
       "no_languages": "Server has no language models installed",
       "unknown": "Unexpected error"
     }
+  },
+  "services": {
+    "translate": {
+      "name": "Translate text",
+      "description": "Translate text between languages using LibreTranslate.",
+      "fields": {
+        "text": {
+          "name": "Text",
+          "description": "The text to translate."
+        },
+        "source": {
+          "name": "Source language",
+          "description": "The source language code (e.g., 'en' for English)."
+        },
+        "target": {
+          "name": "Target language",
+          "description": "The target language code (e.g., 'es' for Spanish)."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "no_config_entry": {
+      "message": "No Argos Translate instance configured. Add one via Settings > Integrations."
+    },
+    "invalid_source": {
+      "message": "Unknown source language: {source}"
+    },
+    "invalid_target": {
+      "message": "Cannot translate from {source} to {target}. Target language is not available for this source."
+    }
   }
 }

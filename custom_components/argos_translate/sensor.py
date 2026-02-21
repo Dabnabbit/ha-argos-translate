@@ -69,4 +69,7 @@ class ArgosLanguageCountSensor(CoordinatorEntity[ArgosCoordinator], SensorEntity
         return {
             "languages": [lang["name"] for lang in languages],
             "language_codes": [lang["code"] for lang in languages],
+            "language_targets": {
+                lang["code"]: lang.get("targets", []) for lang in languages
+            },
         }
