@@ -170,7 +170,7 @@ async def test_form_duplicate_abort(hass: HomeAssistant) -> None:
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:
-    """Test the options flow updates entry.data with new values."""
+    """Test the options flow updates entry.data with new values and triggers reload."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -189,7 +189,11 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     with patch(
         "custom_components.argos_translate.config_flow._async_validate_connection",
         return_value=None,
-    ):
+    ), patch.object(
+        hass.config_entries,
+        "async_reload",
+        return_value=True,
+    ) as mock_reload:
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
@@ -205,3 +209,86 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert entry.data[CONF_HOST] == "192.168.1.200"
     assert entry.data[CONF_USE_SSL] is True
     assert entry.data[CONF_NAME] == "My LibreTranslate"
+    mock_reload.assert_called_once_with(entry.entry_id)
+
+
+async def test_options_flow_no_reload_on_connection_error(hass: HomeAssistant) -> None:
+    """Test that async_reload is NOT called when connection validation fails."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_NAME: "My LibreTranslate",
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 5000,
+            CONF_USE_SSL: False,
+            CONF_API_KEY: "old-key",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+
+    with patch(
+        "custom_components.argos_translate.config_flow._async_validate_connection",
+        side_effect=CannotConnect,
+    ), patch.object(
+        hass.config_entries,
+        "async_reload",
+        return_value=True,
+    ) as mock_reload:
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "bad-host",
+                CONF_PORT: 5000,
+                CONF_USE_SSL: False,
+                CONF_API_KEY: "old-key",
+            },
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    mock_reload.assert_not_called()
+    assert entry.data[CONF_HOST] == "192.168.1.100"
+
+
+async def test_options_flow_no_reload_on_auth_error(hass: HomeAssistant) -> None:
+    """Test that async_reload is NOT called when auth validation fails."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_NAME: "My LibreTranslate",
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 5000,
+            CONF_USE_SSL: False,
+            CONF_API_KEY: "old-key",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+
+    with patch(
+        "custom_components.argos_translate.config_flow._async_validate_connection",
+        side_effect=InvalidAuth,
+    ), patch.object(
+        hass.config_entries,
+        "async_reload",
+        return_value=True,
+    ) as mock_reload:
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "192.168.1.100",
+                CONF_PORT: 5000,
+                CONF_USE_SSL: False,
+                CONF_API_KEY: "bad-key",
+            },
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+    mock_reload.assert_not_called()
+    assert entry.data[CONF_HOST] == "192.168.1.100"
