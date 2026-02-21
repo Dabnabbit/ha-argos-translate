@@ -1,4 +1,4 @@
-"""API client for Argos Translate."""
+"""API client for Argos Translate (LibreTranslate)."""
 
 from __future__ import annotations
 
@@ -21,8 +21,8 @@ class InvalidAuthError(Exception):
     """Raised when the API returns a 401 or 403 response."""
 
 
-class ApiClient:
-    """Generic API client with configurable auth, timeout, and error handling."""
+class ArgosTranslateApiClient:
+    """API client for LibreTranslate server."""
 
     def __init__(
         self,
@@ -30,32 +30,25 @@ class ApiClient:
         port: int,
         api_key: str,
         session: aiohttp.ClientSession,
+        use_ssl: bool = False,
         timeout: int = DEFAULT_TIMEOUT,
     ) -> None:
         """Initialize the API client."""
-        self._base_url = f"http://{host}:{port}"
+        scheme = "https" if use_ssl else "http"
+        self._base_url = f"{scheme}://{host}:{port}"
         self._api_key = api_key
         self._session = session
         self._timeout = aiohttp.ClientTimeout(total=timeout)
 
-    def _get_auth_headers(self) -> dict[str, str]:
-        """Return authorization headers.
-
-        Override to use query param or body auth instead.
-        """
-        return {"Authorization": f"Bearer {self._api_key}"}
-
     async def _request(
         self, method: str, endpoint: str, **kwargs: Any
-    ) -> dict[str, Any]:
-        """Make an authenticated request to the API."""
+    ) -> Any:
+        """Make a request to the LibreTranslate API."""
         url = f"{self._base_url}{endpoint}"
-        headers = self._get_auth_headers()
         try:
             response = await self._session.request(
                 method,
                 url,
-                headers=headers,
                 timeout=self._timeout,
                 **kwargs,
             )
@@ -75,16 +68,37 @@ class ApiClient:
         return await response.json()
 
     async def async_test_connection(self) -> bool:
-        """Test the connection to the API.
+        """Test connection by fetching languages from LibreTranslate.
 
-        TODO: Replace /health with the actual health-check endpoint.
+        Returns True if server is reachable and has language models installed.
+        Raises CannotConnectError if unreachable or no languages installed.
         """
-        await self._request("GET", "/health")
+        languages = await self._request("GET", "/languages")
+        if not languages:
+            raise CannotConnectError("No languages installed on server")
         return True
 
-    async def async_get_data(self) -> dict[str, Any]:
-        """Fetch data from the API.
+    async def async_get_languages(self) -> list[dict[str, Any]]:
+        """Fetch available languages from LibreTranslate.
 
-        TODO: Replace /api/data with the actual data endpoint.
+        Returns list of language dicts: [{code, name, targets}, ...]
         """
-        return await self._request("GET", "/api/data")
+        return await self._request("GET", "/languages")
+
+    async def async_translate(
+        self, text: str, source: str, target: str
+    ) -> str:
+        """Translate text using LibreTranslate.
+
+        API key is sent in the POST body (not as a header).
+        Returns the translated text string.
+        """
+        payload: dict[str, str] = {
+            "q": text,
+            "source": source,
+            "target": target,
+        }
+        if self._api_key:
+            payload["api_key"] = self._api_key
+        result = await self._request("POST", "/translate", json=payload)
+        return result["translatedText"]
