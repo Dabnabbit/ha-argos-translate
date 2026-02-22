@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 
 ## Current Position
 
-Phase: 5 (Auto-Detect + Card Polish — IN PROGRESS)
-Current Plan: 05-02 complete, 05-03 next
-Status: Plan 2/3 complete. Card polish (ARIA, error discrimination, responsive layout) delivered.
-Last activity: 2026-02-22 — 05-02 card polish executed
+Phase: 5 (Auto-Detect + Card Polish — COMPLETE)
+Current Plan: 05-03 complete — all plans done
+Status: All 3/3 plans complete. Auto-detect UI (dropdown, feedback, candidates) delivered. Card v0.5.0.
+Last activity: 2026-02-22 — 05-03 auto-detect card UI executed
 
-Progress: [████████░░] 70% (v1.1 phases 4-6)
+Progress: [██████████] 85% (v1.1 phases 4-6)
 
 ## Deploy Validation Session (2026-02-21) — COMPLETE
 
@@ -54,13 +54,13 @@ Progress: [████████░░] 70% (v1.1 phases 4-6)
 | Phases | 3 | 3 planned |
 | Requirements | 16 delivered | 16 in scope |
 | Lines of code | 2,052 | TBD |
-
 ### Phase 5 Execution Metrics
 
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | 05-01 | 127s | 3 | 7 |
 | 05-02 | 3min | 2 | 1 |
+| 05-03 | 139s | 2 | 1 |
 
 ## Accumulated Context
 
@@ -83,6 +83,9 @@ All architectural decisions logged in PROJECT.md Key Decisions table.
 - [Phase 05-02]: CSS container queries (container-type: inline-size on :host) used for card-width-responsive layout, not viewport media queries
 - [Phase 05-02]: Layout breakpoint at 580px card width switches to side-by-side panels
 - [Phase 05-02]: Error discrimination by err.code (numeric vs string) before err.message for HA WebSocket error objects
+- [Phase 05]: auto: prefix in option values encodes candidate codes for re-translation without polluting language lists
+- [Phase 05]: Detection candidates fetched via argos_translate.detect service post-translation (best-effort, silent catch)
+- [Phase 05]: DETECTION_CONFIDENCE_THRESHOLD = 50.0 applied client-side to filter dropdown candidate options
 
 ### Pending Todos
 
@@ -95,6 +98,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 05-02-PLAN.md — card polish (ARIA, error discrimination, responsive layout, card v0.4.0)
-Resume action: Run `/gsd:execute-phase 5` to continue with 05-03-PLAN.md (card auto-detect UI)
-Resume file: .planning/phases/05-auto-detect-card-polish/05-03-PLAN.md
+Stopped at: Completed 05-03-PLAN.md — card auto-detect UI (auto-detect dropdown, detection feedback, candidates, card v0.5.0)
+Resume action: Phase 5 complete. Run `/gsd:execute-phase 6` for next phase.
+Resume file: N/A — Phase 5 all plans complete
