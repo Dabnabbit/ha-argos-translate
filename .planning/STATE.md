@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-21)
 
 **Core value:** Local, privacy-respecting text translation via self-hosted LibreTranslate — no cloud, no API limits
-**Current focus:** v1.1 Enhancement — Phase 5 complete. All 4 plans executed. 5 UAT gaps closed. Ready for Phase 5 re-test.
+**Current focus:** v1.1 Enhancement — Phase 5 re-test found 4 issues (3 persisting from first UAT + 1 new). Diagnosed. Needs second gap closure round.
 
 ## Current Position
 
-Phase: 5 (Auto-Detect + Card Polish — COMPLETE)
-Current Plan: 05-04 COMPLETE — all 5 UAT gaps closed
-Status: 4/4 plans complete. services.py and card v0.5.1 deployed with all fixes applied.
-Last activity: 2026-02-22 — 05-04 gap closure plan executed successfully
+Phase: 5 (Auto-Detect + Card Polish — UAT RE-TEST DIAGNOSED)
+Current Plan: 05-04 complete but 4 gaps remain after re-test
+Status: 4/4 plans executed. Re-test: 3 passed, 4 issues. Root causes diagnosed for all 4.
+Last activity: 2026-02-22 — UAT re-test + diagnosis complete, ready for /gsd:plan-phase 5 --gaps
 
 Progress: [████████░░] 80% (v1.1 phases 4-6)
 
@@ -111,7 +111,7 @@ All architectural decisions logged in PROJECT.md Key Decisions table.
 
 ### Pending Todos
 
-- Re-run Phase 5 UAT (11 tests) against updated services.py and card v0.5.1 to confirm all 5 gaps are closed
+- Plan and execute second gap closure for Phase 5 (4 diagnosed issues: status indicator, container query, card height, auto-detect fallback)
 
 ### Blockers/Concerns
 
@@ -121,6 +121,6 @@ All architectural decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 05-04-PLAN.md — all 5 UAT gaps closed, Phase 5 gap closure complete
-Resume action: Deploy to QNAP (rsync + reload integration + hard refresh), then re-run Phase 5 UAT
-Resume file: N/A — Phase 5 execution complete; next step is UAT re-test
+Stopped at: UAT re-test complete (3/7 pass, 4 issues), all 4 gaps diagnosed with root causes
+Resume action: /gsd:plan-phase 5 --gaps → then /gsd:execute-phase 5 --gaps-only → then re-test
+Resume file: .planning/phases/05-auto-detect-card-polish/05-UAT.md (status: diagnosed, 4 gaps with root causes)
