@@ -86,8 +86,8 @@ class ArgosTranslateCard extends LitElement {
   getGridOptions() {
     return {
       rows: 7,
-      columns: 6,
-      min_rows: 6,
+      columns: 12,
+      min_rows: 5,
       min_columns: 4,
     };
   }
@@ -280,6 +280,9 @@ class ArgosTranslateCard extends LitElement {
       this._target &&
       status.online;
 
+    const layout = (this.config && this.config.layout) || "auto";
+    this.setAttribute("data-layout", layout);
+
     return html`
       <ha-card header="${this.config.header || ""}">
         <div class="card-content">
@@ -327,13 +330,26 @@ class ArgosTranslateCard extends LitElement {
             </select>
           </div>
 
-          <textarea
-            rows="3"
-            placeholder="Enter text to translate..."
-            aria-label="Text to translate"
-            .value="${this._inputText}"
-            @input="${this._inputChanged}"
-          ></textarea>
+          <div class="content-area">
+            <div class="input-panel">
+              <textarea
+                rows="4"
+                placeholder="Enter text to translate..."
+                aria-label="Text to translate"
+                .value="${this._inputText}"
+                @input="${this._inputChanged}"
+              ></textarea>
+            </div>
+            <div class="output-panel">
+              <textarea
+                rows="4"
+                readonly
+                placeholder=""
+                aria-label="Translated text"
+                .value="${this._outputText}"
+              ></textarea>
+            </div>
+          </div>
 
           <button
             class="translate-btn"
@@ -350,14 +366,6 @@ class ArgosTranslateCard extends LitElement {
             return reason ? html`<div class="hint">${reason}</div>` : "";
           })()}
 
-          <textarea
-            rows="3"
-            readonly
-            placeholder=""
-            aria-label="Translated text"
-            .value="${this._outputText}"
-          ></textarea>
-
           ${this._error
             ? html`<ha-alert alert-type="error">${this._error}</ha-alert>`
             : ""}
@@ -370,6 +378,8 @@ class ArgosTranslateCard extends LitElement {
     return css`
       :host {
         display: block;
+        container-type: inline-size;
+        container-name: argos-card;
       }
       ha-card {
         overflow: hidden;
@@ -423,16 +433,17 @@ class ArgosTranslateCard extends LitElement {
         align-items: center;
         gap: 8px;
         margin-bottom: 12px;
+        flex-wrap: wrap;
       }
       .lang-row select {
-        flex: 1;
+        flex: 1 1 120px;
         padding: 8px;
         border: 1px solid var(--divider-color, #e0e0e0);
         border-radius: 4px;
         background: var(--card-background-color, #fff);
         color: var(--primary-text-color);
         font-size: 14px;
-        min-width: 0;
+        min-width: 100px;
       }
       textarea {
         width: 100%;
@@ -448,6 +459,37 @@ class ArgosTranslateCard extends LitElement {
       }
       textarea[readonly] {
         background: var(--secondary-background-color, #f5f5f5);
+      }
+      .content-area {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .input-panel textarea,
+      .output-panel textarea {
+        width: 100%;
+        box-sizing: border-box;
+      }
+      @container argos-card (min-width: 580px) {
+        .content-area {
+          flex-direction: row;
+        }
+        .input-panel,
+        .output-panel {
+          flex: 1;
+          min-width: 0;
+        }
+      }
+      :host([data-layout="horizontal"]) .content-area {
+        flex-direction: row;
+      }
+      :host([data-layout="horizontal"]) .input-panel,
+      :host([data-layout="horizontal"]) .output-panel {
+        flex: 1;
+        min-width: 0;
+      }
+      :host([data-layout="vertical"]) .content-area {
+        flex-direction: column;
       }
       .translate-btn {
         width: 100%;
@@ -542,6 +584,16 @@ class ArgosTranslateCardEditor extends LitElement {
           @input="${this._defaultTargetChanged}"
           placeholder="e.g., es"
         ></ha-textfield>
+        <ha-select
+          label="Layout"
+          .value="${this.config.layout || "auto"}"
+          @selected="${this._layoutChanged}"
+          @closed="${(ev) => ev.stopPropagation()}"
+        >
+          <mwc-list-item value="auto">Auto (responsive)</mwc-list-item>
+          <mwc-list-item value="horizontal">Horizontal</mwc-list-item>
+          <mwc-list-item value="vertical">Vertical</mwc-list-item>
+        </ha-select>
       </div>
     `;
   }
@@ -564,6 +616,10 @@ class ArgosTranslateCardEditor extends LitElement {
 
   _defaultTargetChanged(ev) {
     this._updateConfig("default_target", ev.target.value);
+  }
+
+  _layoutChanged(ev) {
+    this._updateConfig("layout", ev.target.value);
   }
 
   _updateConfig(key, value) {
