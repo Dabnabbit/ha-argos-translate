@@ -22,11 +22,11 @@ Requirements for v1.1 Enhancement milestone. Each maps to roadmap phases.
 ### Auto-Detect Language
 
 - [ ] **DTCT-01**: User can select "Auto" as source language in the card dropdown
-- [ ] **DTCT-02**: Service call accepts `source: "auto"` and returns translated text with detected language info
-- [ ] **DTCT-03**: Service response includes `detected_language` code and `detection_confidence` when source was "auto"
+- [x] **DTCT-02**: Service call accepts `source: "auto"` and returns translated text with detected language info
+- [x] **DTCT-03**: Service response includes `detected_language` code and `detection_confidence` when source was "auto"
 - [ ] **DTCT-04**: Card target dropdown shows all available targets when source is "Auto"
 - [ ] **DTCT-05**: Card displays detected language label (e.g. "Detected: French (90%)") after auto-translate
-- [ ] **DTCT-06**: Card handles case where detected language is not installed (shows user-visible message)
+- [x] **DTCT-06**: Card handles case where detected language is not installed (shows user-visible message)
 
 ### Card Polish
 
@@ -72,11 +72,11 @@ Deferred to future release. Tracked but not in current roadmap.
 | OPTS-01 | Phase 4 | Complete |
 | OPTS-02 | Phase 4 | Complete |
 | DTCT-01 | Phase 5 | Pending |
-| DTCT-02 | Phase 5 | Pending |
-| DTCT-03 | Phase 5 | Pending |
+| DTCT-02 | Phase 5 | Complete |
+| DTCT-03 | Phase 5 | Complete |
 | DTCT-04 | Phase 5 | Pending |
 | DTCT-05 | Phase 5 | Pending |
-| DTCT-06 | Phase 5 | Pending |
+| DTCT-06 | Phase 5 | Complete |
 | CPOL-01 | Phase 5 | Pending |
 | CPOL-02 | Phase 5 | Pending |
 | CPOL-03 | Phase 5 | Pending |

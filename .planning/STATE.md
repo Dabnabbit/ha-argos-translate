@@ -9,11 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 
 ## Current Position
 
-Phase: 5 (Auto-Detect + Card Polish — PLANNED)
-Status: 3 plans in 2 waves, verified by plan checker (2 iterations). Ready for execution.
-Last activity: 2026-02-22 — Phase 5 plan-phase complete
+Phase: 5 (Auto-Detect + Card Polish — IN PROGRESS)
+Current Plan: 05-01 complete, 05-02 next
+Status: Plan 1/3 complete. Backend auto-detect support delivered.
+Last activity: 2026-02-22 — 05-01 backend auto-detect executed
 
-Progress: [██████░░░░] 60% (v1.1 phases 4-6)
+Progress: [███████░░░] 65% (v1.1 phases 4-6)
 
 ## Deploy Validation Session (2026-02-21) — COMPLETE
 
@@ -54,6 +55,12 @@ Progress: [██████░░░░] 60% (v1.1 phases 4-6)
 | Requirements | 16 delivered | 16 in scope |
 | Lines of code | 2,052 | TBD |
 
+### Phase 5 Execution Metrics
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| 05-01 | 127s | 3 | 7 |
+
 ## Accumulated Context
 
 ### Decisions
@@ -70,6 +77,8 @@ All architectural decisions logged in PROJECT.md Key Decisions table.
 - LibreTranslate has no network discovery (no mDNS/Zeroconf/SSDP) — config flow requires manual host entry
 - Entity IDs use device name ("libretranslate") not integration domain ("argos_translate") — card search must match both
 - JS-only changes don't need HA restart — just rsync + browser hard refresh (Ctrl+Shift+R)
+- [Phase 05]: async_translate returns full LibreTranslate response dict to surface detectedLanguage alongside translatedText
+- [Phase 05]: Auto source bypass uses explicit if source != AUTO_SOURCE guard rather than adding auto to language lists
 
 ### Pending Todos
 
@@ -82,6 +91,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Phase 5 planned — 3 plans (05-01 backend, 05-02 card polish, 05-03 card auto-detect UI) verified and ready
-Resume action: Run `/gsd:execute-phase 5` to execute Auto-Detect + Card Polish phase
-Resume file: .planning/phases/05-auto-detect-card-polish/05-01-PLAN.md
+Stopped at: Completed 05-01-PLAN.md — backend auto-detect support (api.py, coordinator.py, services.py, tests)
+Resume action: Run `/gsd:execute-phase 5` to continue with 05-02-PLAN.md (card polish)
+Resume file: .planning/phases/05-auto-detect-card-polish/05-02-PLAN.md
