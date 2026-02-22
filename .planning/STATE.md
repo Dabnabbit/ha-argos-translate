@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-21)
 
 **Core value:** Local, privacy-respecting text translation via self-hosted LibreTranslate — no cloud, no API limits
-**Current focus:** v1.1 Enhancement — Phase 5 planned, ready for execution
+**Current focus:** v1.1 Enhancement — Phase 5 UAT gap closure planned, ready for execution
 
 ## Current Position
 
-Phase: 5 (Auto-Detect + Card Polish — COMPLETE)
-Current Plan: 05-03 complete — all plans done
-Status: All 3/3 plans complete. Auto-detect UI (dropdown, feedback, candidates) delivered. Card v0.5.0.
-Last activity: 2026-02-22 — 05-03 auto-detect card UI executed
+Phase: 5 (Auto-Detect + Card Polish — UAT gap closure pending)
+Current Plan: 05-04 gap closure plan created, verified, ready to execute
+Status: 3/3 original plans complete. UAT found 5 issues (1 major, 4 minor). All diagnosed. Fix plan 05-04 ready.
+Last activity: 2026-02-22 — UAT complete, gaps diagnosed, fix plan created and verified
 
-Progress: [██████████] 85% (v1.1 phases 4-6)
+Progress: [████████░░] 80% (v1.1 phases 4-6)
 
 ## Deploy Validation Session (2026-02-21) — COMPLETE
 
@@ -62,6 +62,23 @@ Progress: [██████████] 85% (v1.1 phases 4-6)
 | 05-02 | 3min | 2 | 1 |
 | 05-03 | 139s | 2 | 1 |
 
+### Phase 5 UAT Results
+
+| Metric | Count |
+|--------|-------|
+| Tests | 11 |
+| Passed | 5 |
+| Issues | 5 |
+| Skipped | 1 |
+
+| Issue | Severity | Root Cause |
+|-------|----------|------------|
+| Swap creates invalid pair | minor | No pre-swap guard on reversed pair validity |
+| Status stays green on failure | minor | Service errors don't trigger coordinator refresh |
+| Container query never fires | major | Shadow DOM boundary blocks named container queries on :host |
+| Card too tall | minor | getGridOptions rows: 7 exceeds content needs |
+| Textarea overflow | minor | resize: vertical incompatible with grid-managed height |
+
 ## Accumulated Context
 
 ### Decisions
@@ -80,7 +97,7 @@ All architectural decisions logged in PROJECT.md Key Decisions table.
 - JS-only changes don't need HA restart — just rsync + browser hard refresh (Ctrl+Shift+R)
 - [Phase 05]: async_translate returns full LibreTranslate response dict to surface detectedLanguage alongside translatedText
 - [Phase 05]: Auto source bypass uses explicit if source != AUTO_SOURCE guard rather than adding auto to language lists
-- [Phase 05-02]: CSS container queries (container-type: inline-size on :host) used for card-width-responsive layout, not viewport media queries
+- [Phase 05-02]: CSS container queries used for card-width-responsive layout, not viewport media queries — NOTE: container-type on :host doesn't work across shadow DOM boundary; fix in 05-04 moves it to .card-content
 - [Phase 05-02]: Layout breakpoint at 580px card width switches to side-by-side panels
 - [Phase 05-02]: Error discrimination by err.code (numeric vs string) before err.message for HA WebSocket error objects
 - [Phase 05]: auto: prefix in option values encodes candidate codes for re-translation without polluting language lists
@@ -89,15 +106,16 @@ All architectural decisions logged in PROJECT.md Key Decisions table.
 
 ### Pending Todos
 
-None.
+- Execute 05-04 gap closure plan (5 fixes: swap guard, status refresh, CQ shadow DOM fix, grid rows, textarea resize)
 
 ### Blockers/Concerns
 
-None.
+- LibreTranslate /detect endpoint only returns single candidate per request — multi-candidate dropdown feature works in code but untestable with current server
+- Many LibreTranslate language pairs are one-way only (e.g., fr→fr but not fr→en) — affects swap and auto-detect UX on servers with limited models
 
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 05-03-PLAN.md — card auto-detect UI (auto-detect dropdown, detection feedback, candidates, card v0.5.0)
-Resume action: Phase 5 complete. Run `/gsd:execute-phase 6` for next phase.
-Resume file: N/A — Phase 5 all plans complete
+Stopped at: Phase 5 UAT complete — 5 passed, 5 issues diagnosed, gap closure plan 05-04 created and verified
+Resume action: Run `/gsd:execute-phase 5 --gaps-only` to execute fix plan, then re-test
+Resume file: .planning/phases/05-auto-detect-card-polish/05-04-PLAN.md
