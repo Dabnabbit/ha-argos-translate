@@ -55,9 +55,15 @@ class ArgosCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def async_translate(
         self, text: str, source: str, target: str
-    ) -> str:
+    ) -> dict[str, Any]:
         """Translate text via the API client.
 
-        Convenience method used by the translate service (Phase 2).
+        Convenience method used by the translate service. Returns the full
+        response dict from LibreTranslate, including 'detectedLanguage' when
+        source is 'auto'.
         """
         return await self.client.async_translate(text, source, target)
+
+    async def async_detect_languages(self, text: str) -> list[dict[str, Any]]:
+        """Detect language candidates for text via the API client."""
+        return await self.client.async_detect_languages(text)

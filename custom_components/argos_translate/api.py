@@ -91,11 +91,12 @@ class ArgosTranslateApiClient:
 
     async def async_translate(
         self, text: str, source: str, target: str
-    ) -> str:
+    ) -> dict[str, Any]:
         """Translate text using LibreTranslate.
 
         API key is sent in the POST body (not as a header).
-        Returns the translated text string.
+        Returns the full response dict from LibreTranslate, which includes
+        'translatedText' and optionally 'detectedLanguage' when source is 'auto'.
         """
         payload: dict[str, str] = {
             "q": text,
@@ -104,5 +105,15 @@ class ArgosTranslateApiClient:
         }
         if self._api_key:
             payload["api_key"] = self._api_key
-        result = await self._request("POST", "/translate", json=payload)
-        return result["translatedText"]
+        return await self._request("POST", "/translate", json=payload)
+
+    async def async_detect_languages(self, text: str) -> list[dict[str, Any]]:
+        """Detect language candidates for text using LibreTranslate /detect endpoint.
+
+        Returns list of candidates: [{"language": "fr", "confidence": 91.0}, ...]
+        sorted by descending confidence.
+        """
+        payload: dict[str, str] = {"q": text}
+        if self._api_key:
+            payload["api_key"] = self._api_key
+        return await self._request("POST", "/detect", json=payload)
