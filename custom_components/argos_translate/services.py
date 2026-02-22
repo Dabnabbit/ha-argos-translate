@@ -87,6 +87,9 @@ def async_register_services(hass: HomeAssistant) -> None:
         try:
             result = await coordinator.async_translate(text, source, target)
         except CannotConnectError as err:
+            # Trigger immediate coordinator refresh so binary_sensor status
+            # updates to offline without waiting for the 5-min poll cycle
+            await coordinator.async_request_refresh()
             raise HomeAssistantError(
                 f"Translation failed: {err}"
             ) from err
@@ -133,6 +136,9 @@ def async_register_services(hass: HomeAssistant) -> None:
         try:
             candidates = await coordinator.async_detect_languages(text)
         except CannotConnectError as err:
+            # Trigger immediate coordinator refresh so binary_sensor status
+            # updates to offline without waiting for the 5-min poll cycle
+            await coordinator.async_request_refresh()
             raise HomeAssistantError(
                 f"Language detection failed: {err}"
             ) from err

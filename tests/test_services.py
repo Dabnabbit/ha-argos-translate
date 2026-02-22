@@ -34,6 +34,7 @@ async def _setup_service(
     }
     mock_coordinator.async_translate = AsyncMock(return_value=mock_result)
     mock_coordinator.async_detect_languages = AsyncMock(return_value=[])
+    mock_coordinator.async_request_refresh = AsyncMock()
 
     mock_runtime_data = MagicMock()
     mock_runtime_data.coordinator = mock_coordinator
@@ -99,7 +100,7 @@ async def test_translate_invalid_target(hass: HomeAssistant) -> None:
 
 
 async def test_translate_api_error(hass: HomeAssistant) -> None:
-    """Test translate when API is unreachable raises HomeAssistantError."""
+    """Test translate when API is unreachable raises HomeAssistantError and triggers refresh."""
     _entry, mock_coordinator = await _setup_service(hass)
     mock_coordinator.async_translate = AsyncMock(
         side_effect=CannotConnectError("timeout")
@@ -113,6 +114,9 @@ async def test_translate_api_error(hass: HomeAssistant) -> None:
             blocking=True,
             return_response=True,
         )
+
+    # Coordinator refresh must be called so binary_sensor flips to offline immediately
+    mock_coordinator.async_request_refresh.assert_called_once()
 
 
 async def test_translate_no_config_entry(hass: HomeAssistant) -> None:
