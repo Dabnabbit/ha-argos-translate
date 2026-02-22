@@ -1,9 +1,11 @@
 ---
-status: diagnosed
+status: complete
 phase: 05-auto-detect-card-polish
-source: [05-01-SUMMARY.md, 05-02-SUMMARY.md, 05-03-SUMMARY.md]
-started: 2026-02-22T06:30:00Z
-updated: 2026-02-22T07:30:00Z
+source: [05-01-SUMMARY.md, 05-02-SUMMARY.md, 05-03-SUMMARY.md, 05-04-SUMMARY.md]
+started: 2026-02-22T09:00:00Z
+updated: 2026-02-22T09:30:00Z
+re_test: true
+previous_session: "2026-02-22T06:30:00Z — 5 passed, 5 issues, 1 skipped"
 ---
 
 ## Current Test
@@ -12,131 +14,93 @@ updated: 2026-02-22T07:30:00Z
 
 ## Tests
 
-### 1. Auto-detect default and translation
-expected: Card loads with "Auto-detect" selected in the source dropdown (first item, separated from language list). Type text in a known foreign language (e.g., "Bonjour le monde"), select a target language, and click Translate. Output shows translated text. Below the output, a detection info line appears: "Detected: [Language] ([confidence]%)".
+### 1. Swap blocks invalid reversed pair
+expected: With a specific source language selected (e.g., English), select a target language whose reverse pair is NOT installed. Click swap. An error message appears saying the reversed pair is not installed. Source and target dropdowns remain unchanged (no silent degradation).
 result: pass
 
-### 2. Source dropdown detection feedback
-expected: After an auto-detect translation, the source dropdown label updates from "Auto-detect" to "Auto ([Detected Language])" (e.g., "Auto (French)"). Opening the dropdown shows detection candidate languages as additional "Auto ([Language])" options between the primary auto option and the separator line.
-result: pass
-
-### 3. Candidate selection re-translates
-expected: After auto-detect translation populates candidates, select a different detection candidate from the source dropdown (one of the "Auto ([Language])" options). The card re-translates using that specific language as a fixed source. Source dropdown updates to show the selected language as a regular (non-auto) selection.
-result: skipped
-reason: LibreTranslate /detect endpoint only returns a single candidate per request — multiple candidates never populate in the dropdown. Feature works in code but untestable with this server.
-
-### 4. Target dropdown unfiltered for auto-detect
-expected: When source is "Auto-detect", the target dropdown shows ALL available languages (not filtered by source language pairs). Switching source to a specific language (e.g., English) may reduce the target list to only valid pairs for that source.
-result: pass
-
-### 5. Swap button disabled for auto-detect
-expected: When source is "Auto-detect", the swap languages button appears disabled and clicking it does nothing. When a specific source language is selected, the swap button becomes active again.
+### 2. Status indicator goes offline on server failure
+expected: Stop or disconnect the LibreTranslate server, then attempt a translation. The error message shows the connection failure AND the status indicator (binary_sensor) turns to offline/red immediately — not after waiting for the 5-minute poll cycle. (Reload integration or check Developer Tools > States for binary_sensor.libretranslate_status = off)
 result: issue
-reported: "swapping languages left->right causes an issue when the reversed pair doesn't exist (e.g., English->French swaps to French->English but fr->en is not installed). Both sides show French after swap since fr only targets fr."
-severity: minor
-
-### 6. Error discrimination
-expected: Stop or disconnect the LibreTranslate server, then attempt a translation. The error message should say something specific like "Cannot connect to LibreTranslate server. Check that it is running." instead of the old generic "Translation failed".
-result: issue
-reported: "correct error message shows, however status indicator still shows as Online (green circle) when server is unreachable"
-severity: minor
-
-### 7. Disabled button hint text
-expected: With no text entered, the Translate button is disabled and a hint below it says "Enter text to translate". If the server is offline, the hint says "LibreTranslate server is offline". Each disabled condition shows an appropriate reason.
-result: pass
-
-### 8. Responsive layout
-expected: On a narrow card (< 580px width), input and output textareas stack vertically. On a wide card (>= 580px), they display side-by-side (input left, output right). In the card editor, a Layout dropdown offers "Auto (responsive)", "Horizontal", and "Vertical" — selecting one forces that layout regardless of card width.
-result: issue
-reported: "input and output boxes never go horizontal automatically, always stacked. Language selectors DO respond to width. Manual layout override (Horizontal/Vertical) works correctly."
+reported: "Server stopped, 'cannot connect' error shows correctly, but green status indicator stays green the whole time. Integration was reloaded before testing."
 severity: major
 
-### 9. ARIA accessibility labels
-expected: Inspecting the card's DOM (browser DevTools), all interactive controls have aria-label attributes: source select ("Source language"), target select ("Target language"), input textarea ("Text to translate"), output textarea ("Translated text"), swap button ("Swap languages").
+### 3. Container query horizontal layout
+expected: Place the card in a wide dashboard column (>= 580px card width). The input and output textareas display side-by-side (horizontal). On a narrow column (< 580px), they stack vertically. The container query now fires correctly inside the shadow DOM.
+result: issue
+reported: "Still stays vertical when in auto mode — container query still not switching to horizontal layout"
+severity: major
+
+### 4. Card height fits content
+expected: Card fits its content area without extending into the "new section" territory below. Grid sizing is 5 rows (reduced from 7). Card height is appropriate for the content — no excessive empty space below.
+result: issue
+reported: "Card definitely does not fit, might be worse than before"
+severity: minor
+
+### 5. Textarea resize disabled
+expected: Textareas no longer have drag handles for resizing. The resize cursor does not appear when hovering over textarea edges. Content stays contained within the card boundary.
 result: pass
 
-### 10. Card height containment
-expected: Card fits its content without extending into the "new section" area below. Grid sizing and card height are appropriate for the content.
+### 6. Regression: Auto-detect translation still works
+expected: Card loads with "Auto-detect" selected. Type foreign language text, select target, click Translate. Output shows translation with "Detected: [Language] ([confidence]%)" below.
 result: issue
-reported: "Card extends too far down into the 'new section' territory below the card content area"
+reported: "Auto-detect works when pair is valid (fr→fr), but fails with HTTP 400 when detected language can't translate to selected target (fr→en). Should detect and show result even when translation pair is unavailable."
 severity: minor
 
-### 11. Textarea resize containment
-expected: If textareas are resizable, the card container grows to contain them. Or textareas should not be resizable beyond the card boundary.
-result: issue
-reported: "Individual text input boxes can be resized via drag handle, but the actual card doesn't resize to contain them — content overflows"
-severity: minor
+### 7. Regression: Error messages still specific
+expected: Error messages are specific (e.g., "HTTP 400: Bad Request", "Cannot connect to LibreTranslate server") — not generic "Translation failed".
+result: pass
 
 ## Summary
 
-total: 11
-passed: 5
-issues: 5
+total: 7
+passed: 3
+issues: 4
 pending: 0
-skipped: 1
+skipped: 0
 
 ## Gaps
 
-- truth: "Swap validates that reversed language pair exists before completing"
-  status: failed
-  reason: "User reported: swapping languages left->right causes an issue when the reversed pair doesn't exist (e.g., English->French swaps to French->English but fr->en is not installed). Both sides show French after swap since fr only targets fr."
-  severity: minor
-  test: 5
-  root_cause: "_swapLanguages commits swap unconditionally then validates after — too late. Post-swap target fallback silently degrades to only valid target."
-  artifacts:
-    - path: "custom_components/argos_translate/frontend/argos_translate-card.js"
-      issue: "_swapLanguages lines 199-219 — no pre-swap guard checking if reversed pair exists"
-  missing:
-    - "Pre-swap check: verify target has source in its targets list before committing swap"
-    - "Show error message or disable swap button when reversed pair is invalid"
-  debug_session: ".planning/debug/swap-languages-invalid-pair.md"
 - truth: "Status indicator updates to offline when server is unreachable"
   status: failed
-  reason: "User reported: correct error message shows, however status indicator still shows as Online (green circle) when server is unreachable"
-  severity: minor
-  test: 6
-  root_cause: "Service call failures and status indicator use separate code paths. CannotConnectError in service call never touches coordinator.last_update_success — status only updates on 5-min poll cycle."
+  reason: "User reported: Server stopped, 'cannot connect' error shows correctly, but green status indicator stays green the whole time. Integration was reloaded before testing."
+  severity: major
+  test: 2
   artifacts:
     - path: "custom_components/argos_translate/services.py"
-      issue: "Lines 87-92 — catch block re-raises error but doesn't trigger coordinator refresh"
-    - path: "custom_components/argos_translate/coordinator.py"
-      issue: "last_update_success only set by _async_update_data poll, not by service call failures"
-  missing:
-    - "Call coordinator.async_request_refresh() after catching CannotConnectError in translate and detect service handlers"
-  debug_session: ".planning/debug/status-indicator-not-updating-on-failure.md"
+      issue: "async_request_refresh() added in CannotConnectError handlers but status indicator still doesn't update"
+  missing: []
+  debug_session: ""
 - truth: "Card auto-switches to horizontal layout at >= 580px card width via CSS container queries"
   status: failed
-  reason: "User reported: input and output boxes never go horizontal automatically, always stacked. Language selectors DO respond to width. Manual layout override (Horizontal/Vertical) works correctly."
+  reason: "User reported: Still stays vertical when in auto mode — container query still not switching to horizontal layout"
   severity: major
-  test: 8
-  root_cause: "container-name on :host crosses a shadow DOM boundary to reach .content-area — browsers cannot traverse named container queries across shadow boundaries. Known browser limitation (WebKit bug 267793, W3C csswg-drafts #5984)."
+  test: 3
   artifacts:
     - path: "custom_components/argos_translate/frontend/argos_translate-card.js"
-      issue: "Lines 484-488 — container-type/container-name on :host; line 578 — @container rule can't find named container across shadow boundary"
-  missing:
-    - "Move container-type and container-name from :host to .card-content (direct shadow DOM ancestor of .content-area, no boundary crossing)"
-  debug_session: ".planning/debug/container-query-not-triggering.md"
+      issue: "container-type moved from :host to .card-content but container query still not firing"
+  missing: []
+  debug_session: ""
 - truth: "Card height fits content without overflowing into new section area"
   status: failed
-  reason: "User reported: Card extends too far down into the 'new section' territory below the card content area"
+  reason: "User reported: Card definitely does not fit, might be worse than before"
   severity: minor
-  test: 10
-  root_cause: "getGridOptions() requests rows: 7 and min_rows: 5 — more grid space than content needs. Card stretches to fill allocated space."
+  test: 4
   artifacts:
     - path: "custom_components/argos_translate/frontend/argos_translate-card.js"
-      issue: "Lines 87-98 — getCardSize returns 7, getGridOptions rows: 7, min_rows: 5"
-  missing:
-    - "Reduce rows to 5 and min_rows to 4; update getCardSize to match"
+      issue: "getGridOptions rows reduced to 5 but card still overflows"
+  missing: []
   debug_session: ""
-- truth: "Textarea resize is contained within the card or disabled"
+- truth: "Auto-detect shows detected language even when translation pair is unavailable"
   status: failed
-  reason: "User reported: Individual text input boxes can be resized via drag handle, but the actual card doesn't resize to contain them — content overflows"
+  reason: "User reported: Auto-detect works when pair is valid (fr→fr), but fails with HTTP 400 when detected language can't translate to selected target (fr→en). Should detect and show result even when translation pair is unavailable."
   severity: minor
-  test: 11
-  root_cause: "resize: vertical on textareas allows user drag beyond card bounds. Lovelace cards have grid-managed height; user-resizable textareas are incompatible."
+  test: 6
   artifacts:
+    - path: "custom_components/argos_translate/services.py"
+      issue: "Auto-detect uses single /translate call with source=auto — fails entirely if pair is invalid"
     - path: "custom_components/argos_translate/frontend/argos_translate-card.js"
-      issue: "Line 563 — resize: vertical on textarea CSS"
+      issue: "No detect-first fallback when translate with auto fails"
   missing:
-    - "Change resize: vertical to resize: none"
+    - "Detect language first via /detect, show result, then attempt translation"
+    - "Parse HTTP 400 response body for more descriptive error message"
   debug_session: ""
