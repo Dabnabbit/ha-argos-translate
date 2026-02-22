@@ -1,58 +1,170 @@
 ---
 phase: 05-auto-detect-card-polish
-verified: 2026-02-22T08:30:00Z
+verified: 2026-02-22T12:00:00Z
 status: passed
-score: 11/11 must-haves verified
-re_verification: false
+score: 5/5 gap-closure fixes verified; 16/16 observable truths verified
+re_verification:
+  previous_status: passed
+  previous_score: 11/11
+  gaps_closed:
+    - "Swap button now validates reversed pair before committing swap (pre-swap guard)"
+    - "Status indicator turns offline immediately on CannotConnectError (coordinator refresh)"
+    - "Container query moved from :host to .card-content for shadow DOM compatibility"
+    - "Card grid height reduced from 7 to 5 rows (getCardSize + getGridOptions)"
+    - "Textarea resize: none — overflow into card boundary prevented"
+  gaps_remaining: []
+  regressions: []
 ---
 
-# Phase 5: Auto-Detect + Card Polish Verification Report
+# Phase 5: Auto-Detect + Card Polish — Re-Verification Report (Post Plan 04)
 
-**Phase Goal:** Users can translate without selecting a source language, see the detected language in the card, and interact with an accessible and mobile-friendly card
-**Verified:** 2026-02-22T08:30:00Z
+**Phase Goal:** Users can translate without knowing the source language; card is accessible and responsive
+**Verified:** 2026-02-22T12:00:00Z
 **Status:** PASSED
-**Re-verification:** No — initial verification
+**Re-verification:** Yes — after gap closure plan 05-04 (5 UAT fixes)
 
 ---
 
-## Goal Achievement
+## Re-Verification Scope
 
-### Observable Truths
+This re-verification focuses on the 5 UAT gaps closed by plan 05-04, plus regression
+checks on all previously-verified items. The initial verification (08:30 UTC same day)
+passed 11/11 must-have truths derived from the three plan frontmatter blocks, but those
+truths were defined before the UAT run that exposed the 5 runtime issues. This report
+adds explicit verification of each UAT fix.
 
-The must-haves from the three plan frontmatter blocks are aggregated and verified individually.
+---
 
-**Plan 01 must-haves (DTCT-02, DTCT-03, DTCT-06 — backend):**
+## Gap-Closure Fix Verification (Plan 05-04)
 
-| # | Truth | Status | Evidence |
-|---|-------|--------|----------|
-| 1 | Service call with source='auto' returns translated text plus detected_language and detection_confidence fields | VERIFIED | `services.py:94-101` — result dict enriched with both fields when `detectedLanguage` in response |
-| 2 | Service call with source='auto' does not raise ServiceValidationError for unknown source | VERIFIED | `services.py:65` — `if source != AUTO_SOURCE:` guard bypasses all validation; confirmed by `test_translate_auto_detect_no_validation_error` |
-| 3 | When detected language code is not in installed languages, response includes uninstalled_detected_language warning field | VERIFIED | `services.py:103-107` — explicit check against `installed_codes`; confirmed by `test_translate_auto_detect_uninstalled_language` |
-| 4 | api.py /detect endpoint returns array of candidate objects with language and confidence | VERIFIED | `api.py:110-119` — `async_detect_languages` POSTs to `/detect`, returns full response |
-| 5 | HA detect service is callable from the card and returns candidate languages array | VERIFIED | `services.py:119-148` — `_async_handle_detect` registered with `SERVICE_DETECT`, returns `{"detections": candidates}` |
+### Fix 1: Pre-swap pair validation (UAT issue — invalid swap silently committed state)
 
-**Plan 02 must-haves (CPOL-01, CPOL-02, CPOL-03, CPOL-04 — card polish):**
+**Claim:** `_swapLanguages()` checks `_getTargetsForSource(oldTarget)` and blocks swap if
+reversed pair does not exist, showing a descriptive error without mutating state.
 
-| # | Truth | Status | Evidence |
-|---|-------|--------|----------|
-| 6 | Card shows specific error messages distinguishing connection failure, timeout, bad request, and generic errors | VERIFIED | `argos_translate-card.js:288-305` — 4-branch catch: numeric/no code, home_assistant_error+timeout, home_assistant_error+connect, service_validation_error |
-| 7 | Disabled translate button has helper text below it explaining why | VERIFIED | `argos_translate-card.js:311-318` — `_getDisabledReason()` returns 4 distinct reasons; `argos_translate-card.js:469-472` — IIFE renders `.hint` div |
-| 8 | All select elements and textareas have aria-label attributes; swap button has aria-label | VERIFIED | Lines 380, 415, 436, 444, 410 — all five interactive controls carry explicit `aria-label` attributes |
-| 9 | Card uses CSS container queries so layout responds to card width, not viewport width | VERIFIED | `argos_translate-card.js:484-487` — `:host` has `container-type: inline-size; container-name: argos-card`; `argos_translate-card.js:578-587` — `@container argos-card (min-width: 580px)` switches to row layout |
-| 10 | Card config supports layout override with values 'auto', 'horizontal', 'vertical' | VERIFIED | `argos_translate-card.js:367-368` — `data-layout` set from config; CSS at lines 588-598 enforces forced layouts |
+**Evidence from codebase:**
 
-**Plan 03 must-haves (DTCT-01, DTCT-04, DTCT-05 — card auto-detect UI):**
+- `argos_translate-card.js:204-211` — `const reversedTargets = this._getTargetsForSource(oldTarget); if (!reversedTargets.includes(oldSource)) { ... this._error = ...; this.requestUpdate(); return; }` — early return before any state mutation when reversed pair absent
+- Error message at line 209: `Cannot swap \u2014 ${targetName} \u2192 ${sourceName} translation pair is not installed.` — descriptive, names both languages
+- `_source` and `_target` are only mutated at lines 214-215, AFTER the guard passes
+- Auto-detect guard still present at line 200: `if (this._source === "auto") return;`
+- On successful swap, `this._error = null` at line 223 clears previous error
 
-| # | Truth | Status | Evidence |
-|---|-------|--------|----------|
-| 11 | Source dropdown has 'Auto-detect' as first item with visual separator from alphabetical list | VERIFIED | `argos_translate-card.js:384-396` — `value="auto"` option first, followed by candidates, then `<option disabled>──────────</option>`, then full language list |
-| 12 | Auto-detect is the default source selection when the card first loads | VERIFIED | `argos_translate-card.js:41` — `this._source = "auto"` in constructor; `updated()` guard at line 143 uses `!this._source` (falsy) so "auto" never gets overwritten |
-| 13 | When source is 'Auto-detect', target dropdown shows all available languages | VERIFIED | `argos_translate-card.js:113-120` — `_getTargetsForSource("auto")` returns `codes` (all languages) |
-| 14 | After auto-detect translation, source dropdown label updates to show detected language | VERIFIED | `argos_translate-card.js:385-387` — option text is `\`Auto (${this._getLanguageName(this._detectedLanguage.language)})\`` when `_detectedLanguage` is set |
-| 15 | Detection candidates above 50% confidence appear as selectable options in source dropdown | VERIFIED | `argos_translate-card.js:15` — `DETECTION_CONFIDENCE_THRESHOLD = 50.0`; `argos_translate-card.js:274-276` — candidates filtered by threshold; `argos_translate-card.js:389-395` — candidates rendered as `auto:XX` options |
-| 16 | Selecting a candidate re-translates using that language as a fixed source | VERIFIED | `argos_translate-card.js:161-174` — `_sourceChanged` handles `val.startsWith("auto:")`, extracts fixed code, clears detection state, calls `_translate()` |
+**Status: VERIFIED**
 
-**Score: 16/16 observable truths verified** (the plan frontmatter listed fewer truths at a higher abstraction; all 16 behavioural truths derived from those entries verify clean)
+---
+
+### Fix 2: Status indicator immediate refresh on connection failure (UAT issue — stayed green after server unreachable)
+
+**Claim:** `services.py _async_handle_translate` and `_async_handle_detect` both call
+`await coordinator.async_request_refresh()` inside their `CannotConnectError` handlers
+before re-raising as `HomeAssistantError`.
+
+**Evidence from codebase:**
+
+- `services.py:89-95` — translate handler: `except CannotConnectError as err: await coordinator.async_request_refresh(); raise HomeAssistantError(...) from err`
+- `services.py:138-144` — detect handler: identical pattern, `await coordinator.async_request_refresh()` before re-raise
+- `async_request_refresh` appears exactly 2 times in services.py (once per handler)
+
+**Test coverage:**
+
+- `tests/test_services.py:37` — `mock_coordinator.async_request_refresh = AsyncMock()` — mock registered
+- `tests/test_services.py:119` — `mock_coordinator.async_request_refresh.assert_called_once()` — asserted in `test_translate_api_error`
+- All 8 tests pass: `8 passed in 0.12s`
+
+**Status: VERIFIED**
+
+---
+
+### Fix 3: Container query moved from :host to .card-content (UAT issue — responsive layout never triggered in shadow DOM)
+
+**Claim:** `container-type: inline-size` and `container-name: argos-card` are on
+`.card-content`, NOT on `:host`. `:host` retains only `display: block`.
+
+**Evidence from codebase:**
+
+- `argos_translate-card.js:490-492` — `:host { display: block; }` — no `container-type`, no `container-name`
+- `argos_translate-card.js:499-505` — `.card-content { padding: 0 16px 16px; flex: 1; overflow: auto; container-type: inline-size; container-name: argos-card; }`
+- `container-type: inline-size` appears exactly once in the file (in `.card-content` only)
+- `@container argos-card (min-width: 580px)` rule at lines 584-593 unchanged — still targets the same named container, now correctly resolved from `.content-area` (child of `.card-content`) inside shadow DOM
+
+**Status: VERIFIED**
+
+---
+
+### Fix 4: Grid height reduced from 7 to 5 rows (UAT issue — card overflowed into adjacent dashboard section)
+
+**Claim:** `getCardSize()` returns `5`; `getGridOptions()` returns `rows: 5, min_rows: 4`.
+
+**Evidence from codebase:**
+
+- `argos_translate-card.js:87-89` — `getCardSize() { return 5; }`
+- `argos_translate-card.js:91-98` — `getGridOptions() { return { rows: 5, columns: 12, min_rows: 4, min_columns: 4 }; }`
+
+**Status: VERIFIED**
+
+---
+
+### Fix 5: Textarea resize: none (UAT issue — users could drag textarea beyond card boundary)
+
+**Claim:** `textarea` CSS rule has `resize: none`, not `resize: vertical`.
+
+**Evidence from codebase:**
+
+- `argos_translate-card.js:569` — `resize: none;` inside the `textarea { ... }` block
+- `resize: vertical` does not appear anywhere in the file
+
+**Status: VERIFIED**
+
+---
+
+### Version Bump
+
+**Claim:** `CARD_VERSION = "0.5.1"`
+
+**Evidence:** `argos_translate-card.js:14` — `const CARD_VERSION = "0.5.1";`
+
+**Status: VERIFIED**
+
+---
+
+## Commit Verification
+
+Both commits referenced in 05-04-SUMMARY.md exist and contain exactly the files claimed:
+
+| Commit | Message | Files Changed |
+|--------|---------|---------------|
+| `5d0822b` | fix(05-04): trigger coordinator refresh on CannotConnectError | `services.py` (+6), `tests/test_services.py` (+6/-1) |
+| `a758559` | feat(05-04): card v0.5.1 — swap guard, container query fix, grid height, resize removal | `argos_translate-card.js` (+19/-13) |
+
+---
+
+## Regression Check: Previously Verified Must-Haves
+
+All 16 observable truths from the initial verification are spot-checked for regressions:
+
+### Observable Truths (Full Set)
+
+| # | Truth | Status | Regression Check |
+|---|-------|--------|-----------------|
+| 1 | Service accepts source='auto' without ServiceValidationError | VERIFIED | `services.py:65` guard unchanged |
+| 2 | Service returns translated_text + detected_language + detection_confidence | VERIFIED | `services.py:97-104` response dict unchanged |
+| 3 | Uninstalled detected language returns uninstalled_detected_language warning | VERIFIED | `services.py:107-110` unchanged |
+| 4 | /detect endpoint returns candidates array | VERIFIED | `api.py` not modified in plan 04 |
+| 5 | HA detect service callable from card | VERIFIED | `services.py:148-154` registration unchanged |
+| 6 | Card shows 4-category error discrimination | VERIFIED | `argos_translate-card.js:292-311` unchanged |
+| 7 | Disabled translate button shows hint text | VERIFIED | `_getDisabledReason()` at lines 317-325 unchanged; hint IIFE at 475-478 unchanged |
+| 8 | All 5 interactive controls have aria-label | VERIFIED | Lines 386, 414-415, 442, 453 unchanged |
+| 9 | CSS container query responds to card width | VERIFIED | Fix 3 above — now correctly on .card-content, not :host |
+| 10 | Layout config override (auto/horizontal/vertical) works | VERIFIED | `argos_translate-card.js:373-374, 594-603` unchanged |
+| 11 | Auto-detect is first option and constructor default | VERIFIED | `constructor:41 this._source = "auto"`; option at line 390 unchanged |
+| 12 | Target dropdown shows all languages when source is auto | VERIFIED | `_getTargetsForSource("auto")` at line 114 unchanged |
+| 13 | Source dropdown label updates to Auto (Language) after detection | VERIFIED | `argos_translate-card.js:391-393` unchanged |
+| 14 | Detection candidates above 50% shown as auto:XX options | VERIFIED | Filter at line 280; render at lines 395-401 unchanged |
+| 15 | Selecting candidate re-translates with fixed source | VERIFIED | `_sourceChanged` at lines 159-187 unchanged |
+| 16 | Swap button blocks swap when source is auto | VERIFIED | `argos_translate-card.js:200` `if (this._source === "auto") return;` present |
+
+**Score: 16/16 truths verified — 0 regressions**
 
 ---
 
@@ -60,98 +172,55 @@ The must-haves from the three plan frontmatter blocks are aggregated and verifie
 
 | Artifact | Provides | Exists | Substantive | Wired | Status |
 |----------|----------|--------|-------------|-------|--------|
-| `custom_components/argos_translate/api.py` | `async_translate` returns full dict; `async_detect_languages` method | Yes | Yes — 119 lines, both methods fully implemented | Used by coordinator | VERIFIED |
-| `custom_components/argos_translate/coordinator.py` | Passthrough for both methods with `dict[str, Any]` return types | Yes | Yes — both methods delegate to `self.client` | Called by services.py | VERIFIED |
-| `custom_components/argos_translate/services.py` | Auto source bypass, detection field enrichment, `detect` service | Yes | Yes — 149 lines, both services registered | Called by card via HA WebSocket | VERIFIED |
-| `custom_components/argos_translate/const.py` | `SERVICE_DETECT = "detect"` | Yes | Yes — constant present at line 13 | Imported by services.py | VERIFIED |
-| `custom_components/argos_translate/strings.json` | `source` field describes 'auto'; new `detect` service block | Yes | Yes — both changes at lines 69 and 77-86 | Used by HA UI | VERIFIED |
-| `custom_components/argos_translate/translations/en.json` | Mirrors strings.json for English locale | Yes | Yes — identical detect service block and updated source description | Used by HA UI | VERIFIED |
-| `tests/test_services.py` | Auto-detect tests: success, uninstalled language, no validation error | Yes | Yes — 3 new tests at lines 133-193, all substantive assertions | All 8 tests pass | VERIFIED |
-| `custom_components/argos_translate/frontend/argos_translate-card.js` | All card polish + auto-detect UI features | Yes | Yes — 779 lines, v0.5.0, all features implemented | Loaded by HA Lovelace | VERIFIED |
+| `custom_components/argos_translate/services.py` | async_request_refresh in both CannotConnectError handlers | Yes | Yes — 155 lines, both handlers patched | Called by HA service dispatch | VERIFIED |
+| `custom_components/argos_translate/frontend/argos_translate-card.js` | Pre-swap guard, container query fix, grid reduction, resize removal, v0.5.1 | Yes | Yes — 785 lines, all 4 card fixes present, version bumped | Loaded by HA Lovelace | VERIFIED |
+| `tests/test_services.py` | async_request_refresh AsyncMock + assert_called_once in test_translate_api_error | Yes | Yes — AsyncMock at line 37; assertion at line 119 | 8/8 tests pass | VERIFIED |
 
 ---
 
-## Key Link Verification
+## Key Link Verification (Plan 05-04 Specific)
 
 | From | To | Via | Status | Evidence |
 |------|----|-----|--------|----------|
-| `api.py` | LibreTranslate `/translate` endpoint | `async_translate` returns full response dict | WIRED | `api.py:108` — `return await self._request("POST", "/translate", json=payload)` — full dict returned, not just `["translatedText"]` |
-| `api.py` | LibreTranslate `/detect` endpoint | `async_detect_languages` POSTs to `/detect` | WIRED | `api.py:118-119` — `return await self._request("POST", "/detect", json=payload)` |
-| `services.py` | `coordinator.py` | `coordinator.async_translate` returns dict; services extracts `result["translatedText"]` | WIRED | `services.py:88, 94` — `result = await coordinator.async_translate(...)` then `result["translatedText"]` |
-| `services.py` | `coordinator.py` | detect service calls `coordinator.async_detect_languages` | WIRED | `services.py:134` — `candidates = await coordinator.async_detect_languages(text)` |
-| `argos_translate-card.js` | `argos_translate.translate` service | `callService` with `source="auto"`, reads `detected_language` from response | WIRED | `argos_translate-card.js:231-245` — callService call; `argos_translate-card.js:248-252` — reads `resp.detected_language` and `resp.detection_confidence` |
-| `argos_translate-card.js` | `argos_translate.detect` service | After auto-detect translation, calls detect service to get candidates | WIRED | `argos_translate-card.js:264-281` — inner try block calls `hass.callService("argos_translate", "detect", { text: this._inputText }, ...)` |
-| `argos_translate-card.js` | `container-type: inline-size` CSS | `:host` declares container; `@container argos-card` rule responds | WIRED | `argos_translate-card.js:486-487` — `:host { container-type: inline-size; container-name: argos-card; }`; `argos_translate-card.js:578` — `@container argos-card (min-width: 580px)` |
-| `argos_translate-card.js` | `err.code` error discrimination | catch block inspects `err?.code` for 4-way branching | WIRED | `argos_translate-card.js:288-305` — `const code = err?.code; const msg = err?.message || "";` followed by full branch tree |
+| `services.py _async_handle_translate catch` | `coordinator.async_request_refresh()` | CannotConnectError handler calls refresh before re-raise | WIRED | `services.py:92` — `await coordinator.async_request_refresh()` inside except block |
+| `services.py _async_handle_detect catch` | `coordinator.async_request_refresh()` | CannotConnectError handler calls refresh before re-raise | WIRED | `services.py:141` — same pattern in detect handler |
+| `.card-content CSS` | `@container argos-card` | container-type on .card-content enables shadow-DOM-local container query | WIRED | `.card-content:503-504` declares container; `@container argos-card (min-width: 580px)` at line 584 consumes it; `:host` block has no container-type |
+| `_swapLanguages()` | `_getTargetsForSource(oldTarget)` | Pre-swap guard uses existing helper to check reversed pair | WIRED | `argos_translate-card.js:205` — `const reversedTargets = this._getTargetsForSource(oldTarget);` |
 
 ---
 
 ## Requirements Coverage
 
-All 10 requirement IDs claimed by the three plans are accounted for:
+All 10 Phase 5 requirement IDs are accounted for. Plan 05-04 claims CPOL-04 and STAB-04.
 
 | Requirement | Source Plan | Description | Status | Evidence |
 |-------------|-------------|-------------|--------|----------|
-| DTCT-01 | 05-03 | User can select "Auto" as source language in card dropdown | SATISFIED | `argos_translate-card.js:384` — `value="auto"` option as first item, default on load (`constructor: this._source = "auto"`) |
-| DTCT-02 | 05-01 | Service call accepts `source: "auto"` and returns translated text with detected language info | SATISFIED | `services.py:65` — bypass guard; `services.py:94-101` — detected_language/detection_confidence in response; `test_translate_auto_detect_success` passes |
-| DTCT-03 | 05-01 | Service response includes `detected_language` code and `detection_confidence` when source was "auto" | SATISFIED | `services.py:96-101` — both fields set; verified by test assertion at `test_services.py:149-151` |
-| DTCT-04 | 05-03 | Card target dropdown shows all available targets when source is "Auto" | SATISFIED | `argos_translate-card.js:113-116` — `_getTargetsForSource("auto")` returns all `codes` |
-| DTCT-05 | 05-03 | Card displays detected language label after auto-translate | SATISFIED | `argos_translate-card.js:452-457` — `.detection-info` div renders `Detected: [Language] ([Confidence]%)` |
-| DTCT-06 | 05-01 | Card handles case where detected language is not installed | SATISFIED | Backend: `services.py:103-107` — `uninstalled_detected_language` field; Frontend: `argos_translate-card.js:255-258` — warning message set in `_error` |
-| CPOL-01 | 05-02 | Card shows specific error messages (connection vs. bad request vs. timeout) | SATISFIED | `argos_translate-card.js:286-305` — 4 distinct error categories |
-| CPOL-02 | 05-02 | Card explains why translate button is disabled | SATISFIED | `argos_translate-card.js:311-318` — `_getDisabledReason()` with 4 reasons; hint div at lines 469-472 |
-| CPOL-03 | 05-02 | All form controls have ARIA labels for screen reader accessibility | SATISFIED | Lines 380 (source select), 415 (target select), 436 (input textarea), 444 (output textarea), 410 (swap button) |
-| CPOL-04 | 05-02 | Card layout stacks properly on mobile/narrow screens | SATISFIED | `argos_translate-card.js:536-542` — `.lang-row { flex-wrap: wrap; }` with `flex: 1 1 120px` on selects; container query at line 578 for textarea panels |
+| DTCT-01 | 05-03 | User can select "Auto" as source language | SATISFIED | `constructor:41`, option at line 390 |
+| DTCT-02 | 05-01 | Service accepts source="auto", returns detected language info | SATISFIED | `services.py:65` bypass; `services.py:97-104` response |
+| DTCT-03 | 05-01 | detected_language + detection_confidence in response | SATISFIED | `services.py:103-104`; test assertion at line 153-155 |
+| DTCT-04 | 05-03 | All target languages shown when source is Auto | SATISFIED | `_getTargetsForSource("auto"):114-116` |
+| DTCT-05 | 05-03 | Card displays detected language after auto-translate | SATISFIED | `.detection-info` div at lines 458-463 |
+| DTCT-06 | 05-01 | Uninstalled detected language shows user warning | SATISFIED | Backend: `services.py:107-110`; Frontend: `argos_translate-card.js:261-263` |
+| CPOL-01 | 05-02 | Specific error messages (connection, timeout, bad request) | SATISFIED | 4-branch catch at lines 292-311 |
+| CPOL-02 | 05-02 | Translate button disabled with explanation | SATISFIED | `_getDisabledReason()` lines 317-325; hint div lines 475-478 |
+| CPOL-03 | 05-02 | ARIA labels on all form controls | SATISFIED | Lines 386 (source), 415 (target), 442 (input textarea), 453 (output textarea), 414 (swap button) |
+| CPOL-04 | 05-02 + 05-04 | Card layout stacks on narrow screens | SATISFIED | `flex-wrap: wrap` at line 547; container query fix now correctly fires inside shadow DOM |
+| STAB-04 | 05-04 | Bugs found during manual testing fixed and tests updated | SATISFIED | 5 UAT bugs fixed in commits 5d0822b + a758559; `test_translate_api_error` now asserts refresh called |
 
-No orphaned requirements found. The REQUIREMENTS.md traceability table lists all 10 IDs under Phase 5 with status Complete.
+No orphaned requirements. REQUIREMENTS.md traceability table lists all 10 Phase 5 IDs as
+Complete and STAB-04 is marked as satisfied by the plan 05-04 work.
 
 ---
 
 ## Anti-Patterns Found
 
-No blockers or stubs detected. Grep scan of all 8 phase-modified files returned only legitimate matches:
+No anti-patterns in either modified file.
 
-- `translation_placeholders` — HA i18n API parameter name (not a stub)
-- `return null` — intentional return value from `_getDisabledReason()` meaning "no reason"
-- HTML `placeholder` attributes — textarea hint text (correct usage)
+Grep for `TODO|FIXME|XXX|HACK|PLACEHOLDER` in `services.py`: 0 matches.
+Grep for `TODO|FIXME|XXX|HACK|PLACEHOLDER` in `argos_translate-card.js`: 0 matches.
 
-No `TODO`, `FIXME`, `XXX`, `HACK`, empty implementations, or incomplete wiring found.
-
----
-
-## Human Verification Required
-
-The following items cannot be verified programmatically:
-
-### 1. Auto-detect label update in source dropdown
-
-**Test:** Load card in HA, enter French text (e.g., "Bonjour le monde"), select "Auto-detect" source, select "English" target, click Translate.
-**Expected:** Source dropdown label changes from "Auto-detect" to "Auto (French)" immediately after translation completes.
-**Why human:** Reactive property update and LitElement re-render require a live browser to confirm DOM update.
-
-### 2. Detection candidates in source dropdown
-
-**Test:** After auto-translate with French text, open the source dropdown.
-**Expected:** One or more "Auto (Language)" candidate options appear above the separator, each representing a language detected above 50% confidence.
-**Why human:** Requires a live LibreTranslate server returning `/detect` candidates; cannot mock at the browser level.
-
-### 3. Horizontal/vertical responsive layout
-
-**Test:** Place the card in a narrow dashboard column (< 580px) and a full-width panel (> 580px).
-**Expected:** Narrow width stacks input/output textareas vertically; wide width shows them side-by-side.
-**Why human:** CSS container query rendering requires a live browser; cannot be verified by static analysis.
-
-### 4. Swap button disabled state when source is Auto
-
-**Test:** Load card with "Auto-detect" source. Observe swap button.
-**Expected:** Swap button appears visually disabled (grayed out) and clicking it does nothing.
-**Why human:** Visual state requires browser; `?disabled` binding only verifiable in live DOM.
-
-### 5. ARIA label screen reader accessibility
-
-**Test:** Navigate card with a screen reader (e.g., NVDA + Firefox or VoiceOver + Safari).
-**Expected:** Each control is announced with its aria-label: "Source language", "Target language", "Text to translate", "Translated text", "Swap languages".
-**Why human:** Screen reader behavior requires assistive technology and a live browser.
+The word "placeholder" appears only in HTML `placeholder` attributes on textarea elements
+(legitimate UX hint text, not a stub indicator).
 
 ---
 
@@ -174,17 +243,72 @@ node --check argos_translate-card.js: SYNTAX OK
 
 ---
 
-## Summary
+## Human Verification Required
 
-Phase 5 goal is fully achieved. All 10 requirements (DTCT-01 through DTCT-06, CPOL-01 through CPOL-04) are implemented and verified against the actual codebase — not just SUMMARY claims:
+The following items require a live browser and HA instance. None are newly introduced by
+plan 05-04; items 1 and 2 are directly related to the gap-closure fixes.
 
-- **Backend (Plans 01):** `api.py` and `coordinator.py` return full LibreTranslate response dicts enabling detected language surfacing. `services.py` accepts `source="auto"` without validation, enriches the response with detection fields, and registers a working `detect` HA service. All 8 tests pass including 3 new auto-detect tests.
-- **Card Polish (Plan 02):** 4-category error discrimination in catch block, `_getDisabledReason()` with hint div, ARIA labels on all 5 interactive controls, CSS container queries for responsive layout, and config `layout` override — all present and wired.
-- **Card Auto-Detect UI (Plan 03):** "Auto-detect" is first dropdown item and constructor default. `_getTargetsForSource("auto")` returns all codes. Detection feedback renders in dropdown label and `.detection-info` div. Candidates fetched via `detect` service and filtered at 50% confidence. Selecting a candidate re-translates with fixed source.
+### 1. Pre-swap error message renders on invalid pair
 
-Five items flagged for human verification cover visual/browser behavior that cannot be asserted through static code analysis.
+**Test:** Load card with "English" source and "Spanish" target. Change source to a
+language that has no reverse pair to Spanish (e.g., "French" if fr->es is not installed).
+Click the swap button.
+**Expected:** An `ha-alert` appears with text like "Cannot swap — Spanish -> French
+translation pair is not installed." Source and target dropdowns remain unchanged.
+**Why human:** DOM state mutation and reactive re-render require a live browser.
+
+### 2. Status dot turns red immediately on server failure
+
+**Test:** Stop the LibreTranslate server. Click Translate from the card.
+**Expected:** The status dot turns red (offline) within ~1 second of the translation
+attempt failing, without waiting up to 5 minutes for the next poll cycle.
+**Why human:** Requires live HA instance with running coordinator and actual network
+failure to observe timing of binary_sensor state change.
+
+### 3. Container query triggers responsive layout at 580px
+
+**Test:** Place card in a narrow column (< 580px wide) and in a wide panel (> 580px wide).
+**Expected:** Narrow: textareas stack vertically. Wide: textareas appear side by side.
+**Why human:** CSS container query rendering inside a shadow DOM requires a live browser
+to confirm the .card-content-scoped query fires correctly post-fix.
+
+### 4. Grid height fits content without overflow
+
+**Test:** Add card to a dashboard grid. Observe whether it overflows into the section below.
+**Expected:** Card fills 5 grid rows and stops; no content bleeds into adjacent sections.
+**Why human:** Dashboard layout and visual overflow require a live HA instance.
+
+### 5. Textarea cannot be resized by user drag
+
+**Test:** Hover over the bottom-right corner of either textarea. Attempt to drag-resize.
+**Expected:** No resize handle cursor appears; textarea dimensions remain fixed.
+**Why human:** Browser cursor and drag behavior require a live browser to confirm.
 
 ---
 
-_Verified: 2026-02-22T08:30:00Z_
+## Summary
+
+All 5 UAT gap-closure fixes from plan 05-04 are confirmed present and correctly wired in
+the actual codebase:
+
+1. **Pre-swap guard** (`argos_translate-card.js:204-212`): `_getTargetsForSource(oldTarget)` called before state mutation; descriptive error set and early return on invalid pair.
+2. **Coordinator refresh on failure** (`services.py:92, 141`): `await coordinator.async_request_refresh()` present in both CannotConnectError handlers; test asserts it is called once.
+3. **Container query on .card-content** (`argos_translate-card.js:503-504`): `container-type: inline-size` and `container-name: argos-card` on `.card-content` only; `:host` block has only `display: block`.
+4. **Grid height reduction** (`argos_translate-card.js:88, 93, 95`): `getCardSize()` returns 5; `getGridOptions()` returns `rows: 5, min_rows: 4`.
+5. **Textarea resize: none** (`argos_translate-card.js:569`): `resize: none` confirmed; `resize: vertical` absent from file.
+
+Card version confirmed at 0.5.1. Both commits (5d0822b, a758559) verified in git history
+and match the file changes claimed in the SUMMARY. All 8 Python tests pass including
+`test_translate_api_error` which now asserts `async_request_refresh` is called once on
+failure. JS syntax check passes. No regressions on the 16 previously verified observable
+truths. All 10 Phase 5 requirement IDs (DTCT-01 through DTCT-06, CPOL-01 through CPOL-04)
+are satisfied and cross-referenced against REQUIREMENTS.md. STAB-04 satisfied.
+
+Phase 5 goal is achieved. Five human verification items remain for live-browser
+confirmation of visual and runtime behavior that cannot be asserted through static analysis.
+
+---
+
+_Verified: 2026-02-22T12:00:00Z_
 _Verifier: Claude (gsd-verifier)_
+_Re-verification after: plan 05-04 gap closure (5 UAT fixes)_

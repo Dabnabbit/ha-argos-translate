@@ -12,7 +12,7 @@ Requirements for v1.1 Enhancement milestone. Each maps to roadmap phases.
 - [ ] **STAB-01**: Integration installs via manual copy to custom_components/ and loads without errors on real HA instance
 - [ ] **STAB-02**: Config flow completes successfully against real LibreTranslate server
 - [ ] **STAB-03**: All sensors, service calls, and card work correctly on real hardware
-- [ ] **STAB-04**: Bugs discovered during manual testing are fixed and tests updated
+- [x] **STAB-04**: Bugs discovered during manual testing are fixed and tests updated
 
 ### Options Flow
 
@@ -68,7 +68,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | STAB-01 | Phase 6 | Pending |
 | STAB-02 | Phase 6 | Pending |
 | STAB-03 | Phase 6 | Pending |
-| STAB-04 | Phase 6 | Pending |
+| STAB-04 | Phase 6 | Complete |
 | OPTS-01 | Phase 4 | Complete |
 | OPTS-02 | Phase 4 | Complete |
 | DTCT-01 | Phase 5 | Complete |
