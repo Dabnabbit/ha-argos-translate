@@ -11,7 +11,7 @@ const LitElement = customElements.get("hui-masonry-view")
 const html = LitElement.prototype.html;
 const css = LitElement.prototype.css;
 
-const CARD_VERSION = "0.3.0";
+const CARD_VERSION = "0.3.1";
 
 console.info(
   `%c ARGOS-TRANSLATE-CARD %c v${CARD_VERSION} `,
@@ -80,15 +80,15 @@ class ArgosTranslateCard extends LitElement {
   }
 
   getCardSize() {
-    return 5;
+    return 7;
   }
 
   getGridOptions() {
     return {
-      rows: 5,
+      rows: 7,
       columns: 6,
-      min_rows: 4,
-      min_columns: 3,
+      min_rows: 6,
+      min_columns: 4,
     };
   }
 
@@ -296,7 +296,7 @@ class ArgosTranslateCard extends LitElement {
           </div>
 
           <textarea
-            rows="4"
+            rows="3"
             placeholder="Enter text to translate..."
             .value="${this._inputText}"
             @input="${this._inputChanged}"
@@ -313,7 +313,7 @@ class ArgosTranslateCard extends LitElement {
           </button>
 
           <textarea
-            rows="4"
+            rows="3"
             readonly
             placeholder=""
             .value="${this._outputText}"
@@ -332,8 +332,16 @@ class ArgosTranslateCard extends LitElement {
       :host {
         display: block;
       }
+      ha-card {
+        overflow: hidden;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
       .card-content {
         padding: 0 16px 16px;
+        flex: 1;
+        overflow: auto;
       }
       .loading {
         display: flex;
