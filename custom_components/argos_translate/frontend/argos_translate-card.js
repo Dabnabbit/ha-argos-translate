@@ -11,7 +11,7 @@ const LitElement = customElements.get("hui-masonry-view")
 const html = LitElement.prototype.html;
 const css = LitElement.prototype.css;
 
-const CARD_VERSION = "0.2.0";
+const CARD_VERSION = "0.3.0";
 
 console.info(
   `%c ARGOS-TRANSLATE-CARD %c v${CARD_VERSION} `,
@@ -57,10 +57,10 @@ class ArgosTranslateCard extends LitElement {
     }
     const entities = Object.keys(hass.states);
     const statusEntity = entities.find((e) =>
-      e.startsWith("binary_sensor.") && e.includes("argos_translate")
+      e.startsWith("binary_sensor.") && (e.includes("libretranslate") || e.includes("argos_translate"))
     );
     const langEntity = entities.find((e) =>
-      e.startsWith("sensor.") && e.includes("argos_translate")
+      e.startsWith("sensor.") && (e.includes("libretranslate") || e.includes("argos_translate"))
     );
     return {
       header: "Translate",

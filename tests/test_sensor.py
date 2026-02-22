@@ -88,13 +88,13 @@ def test_language_count_unique_id():
     assert sensor.unique_id == "test_entry_123_language_count"
 
 
-def test_language_count_disabled_by_default():
-    """Test language count sensor is disabled by default."""
+def test_language_count_enabled_by_default():
+    """Test language count sensor is enabled by default."""
     coordinator = _make_coordinator()
     entry = _make_entry()
     sensor = ArgosLanguageCountSensor(coordinator, entry)
 
-    assert sensor._attr_entity_registry_enabled_default is False
+    assert sensor.entity_registry_enabled_default is True
 
 
 # --- ArgosStatusSensor tests ---

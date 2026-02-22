@@ -10,10 +10,10 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 ## Current Position
 
 Phase: 4+ (Deploy Validation — in progress, ad-hoc)
-Status: Integration deploys to real HA hardware, config flow works, but entities not appearing in States
-Last activity: 2026-02-21 — Debugging entity registration on live HA instance
+Status: Integration deployed to real HA, entities working, translate service confirmed end-to-end, card auto-config fix pending deploy test
+Last activity: 2026-02-21 — Live deployment testing on QNAP HA Docker
 
-Progress: [███░░░░░░░] 33% (v1.1 phases 4-6)
+Progress: [████░░░░░░] 40% (v1.1 phases 4-6)
 
 ## Deploy Validation Session (2026-02-21)
 
@@ -23,32 +23,43 @@ Progress: [███░░░░░░░] 33% (v1.1 phases 4-6)
 - Config flow loads, validates connection to LibreTranslate on QNAP:5500
 - Integration entry is created successfully
 - `curl` from inside HA container to LibreTranslate returns valid language data
-- LibreTranslate server is healthy with 20+ language pairs
+- LibreTranslate server is healthy with 22 language pairs
+- **Coordinator fetches language data** (22 languages, 0.003s)
+- **Both platforms forward successfully** (sensor + binary_sensor)
+- **binary_sensor.libretranslate_status** shows "on" (connected)
+- **sensor.libretranslate_language_count** shows 22 languages
+- **Translate service works end-to-end** via Developer Tools > Actions
+- **Lovelace card appears** in card picker
 
-### What's Broken
-- **Entities not registering**: After adding integration, only "+1 disabled entity" (language count sensor) shows. No binary sensor (connectivity) visible. No entities appear in Developer Tools > States when searching "argos".
-- Root cause unknown — no errors in HA logs related to entity setup
+### What Was Fixed
+- Entity search in States: entities named `libretranslate_*` not `argos_*` — user needs to search "libretranslate"
+- Language count sensor was disabled by default, blocking card setup — now enabled by default
+- Card `getStubConfig` searched for "argos_translate" in entity IDs but they're named "libretranslate" — fixed to match both patterns
 
 ### Changes Made During Session
-1. **config_flow.py**: Name field made optional (default "LibreTranslate"), Port defaults to 5000, form retains values on error via `add_suggested_values_to_schema()`
-2. **api.py**: Replaced `raise_for_status()` with explicit `status >= 400` check wrapped in `CannotConnectError` — prevents unhandled `ClientResponseError` falling through to "unknown" error
-3. **strings.json + translations/en.json**: Error messages made more descriptive (connection, auth, no languages, unknown)
-4. **__init__.py**: Added debug logging to `async_setup_entry` (coordinator refresh, platform forwarding)
-5. **test_coordinator.py**: Fixed `test_coordinator_update_failed` — was incorrectly expecting `UpdateFailed` raise from `async_refresh()` (coordinator catches it internally)
+1. **config_flow.py**: Name field optional (default "LibreTranslate"), Port defaults to 5000, form retains values on error via `add_suggested_values_to_schema()`
+2. **api.py**: Replaced `raise_for_status()` with explicit `status >= 400` check wrapped in `CannotConnectError`
+3. **strings.json + translations/en.json**: Error messages made more descriptive
+4. **__init__.py**: Added debug logging to `async_setup_entry`
+5. **test_coordinator.py**: Fixed `test_coordinator_update_failed` assertion
+6. **sensor.py**: Removed `_attr_entity_registry_enabled_default = False` — card needs this entity
+7. **argos_translate-card.js**: `getStubConfig` now matches both "libretranslate" and "argos_translate" entity patterns; version bumped to 0.3.0
+8. **test_sensor.py**: Updated test to assert sensor enabled by default
 
 ### Next Steps (Resume Here)
-1. Rsync latest code to QNAP, restart HA
-2. Enable debug logging: `docker logs homeassistant --since 2m 2>&1 | grep -i -E "argos|forward.*platform"`
-3. Check if coordinator first refresh succeeds (look for "Coordinator data:" in logs)
-4. Check if platform forwarding completes (look for "Platform setup complete" in logs)
-5. If platforms set up but no entities, investigate entity registry
-6. Test translate service: Developer Tools > Services > `argos_translate.translate`
+1. Rsync latest code to QNAP, restart HA, clear browser cache (Ctrl+Shift+R)
+2. Delete existing integration, re-add
+3. Add Lovelace card — verify entities auto-populate in config
+4. Test translation via the card UI
+5. If card works, deploy validation is essentially complete
+6. Remove debug logging from `__init__.py` (cleanup)
 
 ### Environment
-- HA: Docker container on QNAP NAS (192.168.50.250)
+- HA: Docker container on QNAP NAS (192.168.50.250:8123)
 - LibreTranslate: Docker container on same QNAP, port 5500 (internal 5000)
 - Connectivity confirmed: `docker exec homeassistant curl http://192.168.50.250:5500/languages` returns valid JSON
 - Dev machine: WSL2, rsync push to QNAP
+- Debug logging enabled in configuration.yaml: `custom_components.argos_translate: debug`
 
 ## Performance Metrics
 
@@ -72,6 +83,7 @@ All architectural decisions logged in PROJECT.md Key Decisions table.
 - Confidence threshold of 50.0 applied before surfacing detection results; value logged for tuning
 - Card JS version bump strategy: append `?v=VERSION` query param to Lovelace resource URL on each card change
 - LibreTranslate has no network discovery (no mDNS/Zeroconf/SSDP) — config flow requires manual host entry
+- Entity IDs use device name ("libretranslate") not integration domain ("argos_translate") — card search must match both
 
 ### Pending Todos
 
@@ -79,10 +91,10 @@ None.
 
 ### Blockers/Concerns
 
-- Entity registration issue on live HA needs debugging (debug logging added, awaiting next deploy cycle)
+None active — entity registration issue resolved (was searching wrong name pattern).
 
 ## Session Continuity
 
 Last session: 2026-02-21
-Stopped at: Debugging entity registration — debug logging added to async_setup_entry, awaiting rsync + restart + log review
-Resume action: Rsync code to QNAP, restart HA, check debug logs for entity setup flow, then test translate service
+Stopped at: Card entity auto-detection fix applied, awaiting rsync + deploy test
+Resume action: Rsync to QNAP, restart HA, clear browser cache, test card setup and translation

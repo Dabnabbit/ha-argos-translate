@@ -32,7 +32,6 @@ class ArgosLanguageCountSensor(CoordinatorEntity[ArgosCoordinator], SensorEntity
     """Sensor showing the number of installed languages on LibreTranslate."""
 
     _attr_has_entity_name = True
-    _attr_entity_registry_enabled_default = False
     _attr_icon = "mdi:translate"
     _attr_name = "Language Count"
     _attr_state_class = SensorStateClass.MEASUREMENT
