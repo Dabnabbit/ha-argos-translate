@@ -21,15 +21,19 @@ MOCK_LANGUAGES = [
 
 
 async def _setup_service(
-    hass: HomeAssistant, mock_translated: str = "Hola"
+    hass: HomeAssistant, mock_result: dict | None = None
 ) -> tuple[MockConfigEntry, MagicMock]:
     """Set up the translate service with a mocked coordinator."""
+    if mock_result is None:
+        mock_result = {"translatedText": "Hola"}
+
     mock_coordinator = MagicMock()
     mock_coordinator.data = {
         "languages": MOCK_LANGUAGES,
         "language_count": len(MOCK_LANGUAGES),
     }
-    mock_coordinator.async_translate = AsyncMock(return_value=mock_translated)
+    mock_coordinator.async_translate = AsyncMock(return_value=mock_result)
+    mock_coordinator.async_detect_languages = AsyncMock(return_value=[])
 
     mock_runtime_data = MagicMock()
     mock_runtime_data.coordinator = mock_coordinator
@@ -52,7 +56,7 @@ async def _setup_service(
 
 async def test_translate_success(hass: HomeAssistant) -> None:
     """Test successful translation service call."""
-    _entry, mock_coordinator = await _setup_service(hass, "Hola")
+    _entry, mock_coordinator = await _setup_service(hass, {"translatedText": "Hola"})
 
     result = await hass.services.async_call(
         DOMAIN,
@@ -124,3 +128,66 @@ async def test_translate_no_config_entry(hass: HomeAssistant) -> None:
             blocking=True,
             return_response=True,
         )
+
+
+async def test_translate_auto_detect_success(hass: HomeAssistant) -> None:
+    """Test translate with source='auto' returns detected_language and detection_confidence."""
+    mock_result = {
+        "translatedText": "Hello",
+        "detectedLanguage": {"language": "fr", "confidence": 92.0},
+    }
+    _entry, mock_coordinator = await _setup_service(hass, mock_result)
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "translate",
+        {"text": "Bonjour", "source": "auto", "target": "en"},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert result["translated_text"] == "Hello"
+    assert result["detected_language"] == "fr"
+    assert result["detection_confidence"] == 92.0
+    mock_coordinator.async_translate.assert_called_once_with("Bonjour", "auto", "en")
+
+
+async def test_translate_auto_detect_uninstalled_language(hass: HomeAssistant) -> None:
+    """Test DTCT-06: uninstalled_detected_language field when detected language not in installed list."""
+    # "zh" is not in MOCK_LANGUAGES
+    mock_result = {
+        "translatedText": "Hello",
+        "detectedLanguage": {"language": "zh", "confidence": 85.0},
+    }
+    _entry, _mock_coordinator = await _setup_service(hass, mock_result)
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "translate",
+        {"text": "你好", "source": "auto", "target": "en"},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert result["detected_language"] == "zh"
+    assert result["uninstalled_detected_language"] == "zh"
+
+
+async def test_translate_auto_detect_no_validation_error(hass: HomeAssistant) -> None:
+    """Test that source='auto' bypasses source/target language validation."""
+    mock_result = {
+        "translatedText": "Hello",
+        "detectedLanguage": {"language": "fr", "confidence": 88.0},
+    }
+    _entry, _mock_coordinator = await _setup_service(hass, mock_result)
+
+    # Should not raise ServiceValidationError — 'auto' bypasses validation
+    result = await hass.services.async_call(
+        DOMAIN,
+        "translate",
+        {"text": "Bonjour", "source": "auto", "target": "es"},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert "translated_text" in result
