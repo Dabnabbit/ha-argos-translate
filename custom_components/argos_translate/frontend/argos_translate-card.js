@@ -11,7 +11,7 @@ const LitElement = customElements.get("hui-masonry-view")
 const html = LitElement.prototype.html;
 const css = LitElement.prototype.css;
 
-const CARD_VERSION = "0.3.1";
+const CARD_VERSION = "0.4.0";
 
 console.info(
   `%c ARGOS-TRANSLATE-CARD %c v${CARD_VERSION} `,
@@ -199,10 +199,39 @@ class ArgosTranslateCard extends LitElement {
       );
       this._outputText = result.response.translated_text;
     } catch (err) {
-      this._error = (err && err.message) || "Translation failed";
+      const code = err?.code;
+      const msg = err?.message || "";
+
+      if (!code || typeof code === "number") {
+        // Numeric code (e.g., -1 = ERR_CONNECTION_LOST) or no code = connection issue
+        this._error = "Cannot reach Home Assistant. Check your connection.";
+      } else if (code === "home_assistant_error") {
+        const lower = msg.toLowerCase();
+        if (lower.includes("timeout") || lower.includes("timed out")) {
+          this._error = "Translation timed out. The server may be busy — try again.";
+        } else if (lower.includes("connection") || lower.includes("connect")) {
+          this._error = "Cannot connect to LibreTranslate server. Check that it is running.";
+        } else {
+          this._error = `Translation error: ${msg}`;
+        }
+      } else if (code === "service_validation_error") {
+        this._error = `Invalid request: ${msg}`;
+      } else {
+        this._error = msg || "Translation failed.";
+      }
     } finally {
       this._loading = false;
     }
+  }
+
+  _getDisabledReason() {
+    if (this._loading) return null; // button shows "Translating..." spinner instead
+    const status = this._getStatus();
+    if (!status.online) return "LibreTranslate server is offline";
+    if (!this._inputText) return "Enter text to translate";
+    if (!this._source) return "Select a source language";
+    if (!this._target) return "Select a target language";
+    return null;
   }
 
   render() {
@@ -261,6 +290,7 @@ class ArgosTranslateCard extends LitElement {
 
           <div class="lang-row">
             <select
+              aria-label="Source language"
               .value="${this._source}"
               @change="${this._sourceChanged}"
             >
@@ -277,9 +307,11 @@ class ArgosTranslateCard extends LitElement {
               .path="${"M21,9L17,5V8H10V10H17V13M7,11L3,15L7,19V16H14V14H7V11Z"}"
               @click="${this._swapLanguages}"
               title="Swap languages"
+              aria-label="Swap languages"
             ></ha-icon-button>
 
             <select
+              aria-label="Target language"
               .value="${this._target}"
               @change="${this._targetChanged}"
             >
@@ -298,6 +330,7 @@ class ArgosTranslateCard extends LitElement {
           <textarea
             rows="3"
             placeholder="Enter text to translate..."
+            aria-label="Text to translate"
             .value="${this._inputText}"
             @input="${this._inputChanged}"
           ></textarea>
@@ -312,10 +345,16 @@ class ArgosTranslateCard extends LitElement {
               : "Translate"}
           </button>
 
+          ${(() => {
+            const reason = this._getDisabledReason();
+            return reason ? html`<div class="hint">${reason}</div>` : "";
+          })()}
+
           <textarea
             rows="3"
             readonly
             placeholder=""
+            aria-label="Translated text"
             .value="${this._outputText}"
           ></textarea>
 
@@ -432,6 +471,13 @@ class ArgosTranslateCard extends LitElement {
       }
       .translate-btn:hover:not(:disabled) {
         opacity: 0.9;
+      }
+      .hint {
+        text-align: center;
+        font-size: 0.8em;
+        color: var(--secondary-text-color);
+        margin-top: -8px;
+        margin-bottom: 4px;
       }
       ha-alert {
         display: block;
