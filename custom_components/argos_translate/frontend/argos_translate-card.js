@@ -11,7 +11,8 @@ const LitElement = customElements.get("hui-masonry-view")
 const html = LitElement.prototype.html;
 const css = LitElement.prototype.css;
 
-const CARD_VERSION = "0.4.0";
+const CARD_VERSION = "0.5.0";
+const DETECTION_CONFIDENCE_THRESHOLD = 50.0;
 
 console.info(
   `%c ARGOS-TRANSLATE-CARD %c v${CARD_VERSION} `,
@@ -30,17 +31,21 @@ class ArgosTranslateCard extends LitElement {
       _outputText: { type: String },
       _loading: { type: Boolean },
       _error: { type: String },
+      _detectedLanguage: { type: Object },
+      _detectionCandidates: { type: Array },
     };
   }
 
   constructor() {
     super();
-    this._source = "";
+    this._source = "auto";
     this._target = "";
     this._inputText = "";
     this._outputText = "";
     this._loading = false;
     this._error = null;
+    this._detectedLanguage = null;
+    this._detectionCandidates = [];
   }
 
   static getConfigElement() {
@@ -106,8 +111,18 @@ class ArgosTranslateCard extends LitElement {
   }
 
   _getTargetsForSource(sourceCode) {
+    if (sourceCode === "auto" || (typeof sourceCode === "string" && sourceCode.startsWith("auto:"))) {
+      const { codes } = this._getLanguages();
+      return codes;
+    }
     const { targets } = this._getLanguages();
     return targets[sourceCode] || [];
+  }
+
+  _getLanguageName(code) {
+    const { names, codes } = this._getLanguages();
+    const idx = codes.indexOf(code);
+    return idx >= 0 ? names[idx] : code;
   }
 
   _getStatus() {
@@ -130,6 +145,8 @@ class ArgosTranslateCard extends LitElement {
           (this.config && this.config.default_source && codes.includes(this.config.default_source)
             ? this.config.default_source
             : codes[0]);
+      }
+      if (codes.length > 0 && !this._target) {
         const validTargets = this._getTargetsForSource(this._source);
         this._target =
           (this.config && this.config.default_target && validTargets.includes(this.config.default_target)
@@ -140,10 +157,32 @@ class ArgosTranslateCard extends LitElement {
   }
 
   _sourceChanged(ev) {
-    this._source = ev.target.value;
-    const validTargets = this._getTargetsForSource(this._source);
-    if (!validTargets.includes(this._target)) {
-      this._target = validTargets[0] || "";
+    const val = ev.target.value;
+    if (val.startsWith("auto:")) {
+      // User picked a detection candidate — re-translate with that fixed source
+      const fixedSource = val.slice(5);
+      this._source = fixedSource;
+      this._detectedLanguage = null;
+      this._detectionCandidates = [];
+      const validTargets = this._getTargetsForSource(this._source);
+      if (!validTargets.includes(this._target)) {
+        this._target = validTargets[0] || "";
+      }
+      // Trigger re-translate with the fixed source
+      if (this._inputText && this._target) {
+        this._translate();
+      }
+    } else {
+      this._source = val;
+      if (val !== "auto") {
+        // Switching away from auto-detect — clear detection state
+        this._detectedLanguage = null;
+        this._detectionCandidates = [];
+      }
+      const validTargets = this._getTargetsForSource(this._source);
+      if (!validTargets.includes(this._target)) {
+        this._target = validTargets[0] || "";
+      }
     }
     this.requestUpdate();
   }
@@ -158,6 +197,7 @@ class ArgosTranslateCard extends LitElement {
   }
 
   _swapLanguages() {
+    if (this._source === "auto") return; // Can't swap auto-detect
     const oldSource = this._source;
     const oldTarget = this._target;
     this._source = oldTarget;
@@ -179,7 +219,10 @@ class ArgosTranslateCard extends LitElement {
   }
 
   async _translate() {
-    if (!this._inputText || !this._source || !this._target) return;
+    // Determine actual source to send — "auto" or a specific code
+    const sourceToSend = this._source;
+
+    if (!this._inputText || !sourceToSend || !this._target) return;
 
     this._loading = true;
     this._error = null;
@@ -190,20 +233,61 @@ class ArgosTranslateCard extends LitElement {
         "translate",
         {
           text: this._inputText,
-          source: this._source,
+          source: sourceToSend,
           target: this._target,
         },
         {},
         true,
         true
       );
-      this._outputText = result.response.translated_text;
+
+      const resp = result.response;
+      this._outputText = resp.translated_text;
+
+      // Handle auto-detect feedback
+      if (sourceToSend === "auto" && resp.detected_language) {
+        this._detectedLanguage = {
+          language: resp.detected_language,
+          confidence: resp.detection_confidence,
+        };
+
+        // Handle uninstalled detected language warning (DTCT-06 — display side)
+        if (resp.uninstalled_detected_language) {
+          const langName = this._getLanguageName(resp.uninstalled_detected_language) || resp.uninstalled_detected_language;
+          this._error = `Detected language "${langName}" (${resp.uninstalled_detected_language}) is not installed on the LibreTranslate server. Translation may be incomplete.`;
+        }
+
+        // Fetch detection candidates via the detect HA service (registered in Plan 05-01).
+        // This calls LibreTranslate's /detect endpoint and returns multiple candidates
+        // with confidence scores, enabling the user to pick an alternative detection.
+        try {
+          const detectResult = await this.hass.callService(
+            "argos_translate",
+            "detect",
+            { text: this._inputText },
+            {},
+            true,
+            true
+          );
+          const detections = detectResult.response.detections || [];
+          // Filter to candidates above the confidence threshold
+          this._detectionCandidates = detections.filter(
+            (d) => d.confidence >= DETECTION_CONFIDENCE_THRESHOLD
+          );
+        } catch (_detectErr) {
+          // Detection candidates are best-effort — if /detect fails,
+          // we still have the primary detected language from /translate.
+          this._detectionCandidates = [];
+        }
+      } else {
+        this._detectedLanguage = null;
+        this._detectionCandidates = [];
+      }
     } catch (err) {
+      // Error discrimination from Plan 02 is already in place
       const code = err?.code;
       const msg = err?.message || "";
-
       if (!code || typeof code === "number") {
-        // Numeric code (e.g., -1 = ERR_CONNECTION_LOST) or no code = connection issue
         this._error = "Cannot reach Home Assistant. Check your connection.";
       } else if (code === "home_assistant_error") {
         const lower = msg.toLowerCase();
@@ -297,6 +381,19 @@ class ArgosTranslateCard extends LitElement {
               .value="${this._source}"
               @change="${this._sourceChanged}"
             >
+              <option value="auto" ?selected="${this._source === 'auto'}">
+                ${this._detectedLanguage
+                  ? `Auto (${this._getLanguageName(this._detectedLanguage.language)})`
+                  : "Auto-detect"}
+              </option>
+              ${this._detectionCandidates
+                .filter(c => c.language !== (this._detectedLanguage && this._detectedLanguage.language))
+                .map(c => html`
+                  <option value="auto:${c.language}">
+                    Auto (${this._getLanguageName(c.language)})
+                  </option>
+                `)}
+              <option disabled>──────────</option>
               ${codes.map(
                 (code, i) => html`
                   <option value="${code}" ?selected="${code === this._source}">
@@ -311,6 +408,7 @@ class ArgosTranslateCard extends LitElement {
               @click="${this._swapLanguages}"
               title="Swap languages"
               aria-label="Swap languages"
+              ?disabled="${this._source === 'auto'}"
             ></ha-icon-button>
 
             <select
@@ -350,6 +448,13 @@ class ArgosTranslateCard extends LitElement {
               ></textarea>
             </div>
           </div>
+
+          ${this._detectedLanguage ? html`
+            <div class="detection-info">
+              Detected: ${this._getLanguageName(this._detectedLanguage.language)}
+              (${Math.round(this._detectedLanguage.confidence)}%)
+            </div>
+          ` : ""}
 
           <button
             class="translate-btn"
@@ -520,6 +625,12 @@ class ArgosTranslateCard extends LitElement {
         color: var(--secondary-text-color);
         margin-top: -8px;
         margin-bottom: 4px;
+      }
+      .detection-info {
+        font-size: 0.85em;
+        color: var(--secondary-text-color);
+        padding: 4px 0;
+        margin-top: 4px;
       }
       ha-alert {
         display: block;
