@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 
 ## Current Position
 
-Phase: 5 (Auto-Detect + Card Polish — UAT RE-TEST DIAGNOSED)
-Current Plan: 05-04 complete but 4 gaps remain after re-test
-Status: 4/4 plans executed. Re-test: 3 passed, 4 issues. Root causes diagnosed for all 4.
-Last activity: 2026-02-22 — UAT re-test + diagnosis complete, ready for /gsd:plan-phase 5 --gaps
+Phase: 5 (Auto-Detect + Card Polish — gap closure in progress)
+Current Plan: 05-05 complete (5/6 plans executed)
+Status: Backend gap closure done (status indicator + auto-detect fallback). 05-06 (card CSS) remaining.
+Last activity: 2026-02-22 — 05-05 executed: TranslationError + async_set_update_error + detect-first fallback
 
 Progress: [████████░░] 80% (v1.1 phases 4-6)
 
@@ -63,6 +63,7 @@ Progress: [████████░░] 80% (v1.1 phases 4-6)
 | 05-02 | 3min | 2 | 1 |
 | 05-03 | 139s | 2 | 1 |
 | 05-04 | 2min | 2 | 3 |
+| 05-05 | 3min | 2 | 3 |
 
 ### Phase 5 UAT Results
 
@@ -108,10 +109,15 @@ All architectural decisions logged in PROJECT.md Key Decisions table.
 - [Phase 05]: async_request_refresh called before re-raising HomeAssistantError so coordinator poll runs immediately on CannotConnectError in both translate and detect handlers
 - [Phase 05]: Pre-swap guard reads _getTargetsForSource(oldTarget) to validate reversed pair before mutating state, surfaces descriptive error
 - [Phase 05-04]: container-type/container-name moved from :host to .card-content — shadow DOM boundary blocks :host container from being found by inner class @container queries
+- [Phase 05-auto-detect-card-polish]: async_set_update_error replaces async_request_refresh for immediate binary_sensor offline flip — eliminates 10s debouncer cooldown that silently dropped status updates after integration reload
+- [Phase 05-auto-detect-card-polish]: TranslationError(Exception) added to api.py for HTTP 4xx non-auth errors; CannotConnectError reserved for true connection/timeout failures only
+- [Phase 05-auto-detect-card-polish]: Detect-first pattern for auto source: call /detect before /translate so detection result is available if /translate fails with HTTP 400 (pair unavailable); return partial response instead of raising
 
 ### Pending Todos
 
-- Plan and execute second gap closure for Phase 5 (4 diagnosed issues: status indicator, container query, card height, auto-detect fallback)
+- Execute 05-06 (card CSS gap closure: container query + card height fixes)
+- UAT re-test after 05-06 completes
+- Card JS may need updates to handle partial response format (error field + detected_language in result dict, not just on exception)
 
 ### Blockers/Concerns
 
@@ -121,6 +127,6 @@ All architectural decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: UAT re-test complete (3/7 pass, 4 issues), all 4 gaps diagnosed with root causes
-Resume action: /gsd:plan-phase 5 --gaps → then /gsd:execute-phase 5 --gaps-only → then re-test
-Resume file: .planning/phases/05-auto-detect-card-polish/05-UAT.md (status: diagnosed, 4 gaps with root causes)
+Stopped at: Completed 05-auto-detect-card-polish 05-05-PLAN.md (backend gap closure complete)
+Resume action: /gsd:execute-phase 5 (run 05-06 card CSS gap closure) → then UAT re-test
+Resume file: .planning/phases/05-auto-detect-card-polish/05-06-PLAN.md
