@@ -30,10 +30,10 @@ Requirements for v1.1 Enhancement milestone. Each maps to roadmap phases.
 
 ### Card Polish
 
-- [ ] **CPOL-01**: Card shows specific error messages (connection error vs. bad request vs. timeout) instead of generic "Translation failed"
-- [ ] **CPOL-02**: Card explains why translate button is disabled (server offline, no text entered, no languages selected)
-- [ ] **CPOL-03**: All form controls have ARIA labels for screen reader accessibility
-- [ ] **CPOL-04**: Card layout stacks properly on mobile/narrow screens (flex-wrap on language row)
+- [x] **CPOL-01**: Card shows specific error messages (connection error vs. bad request vs. timeout) instead of generic "Translation failed"
+- [x] **CPOL-02**: Card explains why translate button is disabled (server offline, no text entered, no languages selected)
+- [x] **CPOL-03**: All form controls have ARIA labels for screen reader accessibility
+- [x] **CPOL-04**: Card layout stacks properly on mobile/narrow screens (flex-wrap on language row)
 
 ## v2 Requirements
 
@@ -77,10 +77,10 @@ Deferred to future release. Tracked but not in current roadmap.
 | DTCT-04 | Phase 5 | Pending |
 | DTCT-05 | Phase 5 | Pending |
 | DTCT-06 | Phase 5 | Complete |
-| CPOL-01 | Phase 5 | Pending |
-| CPOL-02 | Phase 5 | Pending |
-| CPOL-03 | Phase 5 | Pending |
-| CPOL-04 | Phase 5 | Pending |
+| CPOL-01 | Phase 5 | Complete |
+| CPOL-02 | Phase 5 | Complete |
+| CPOL-03 | Phase 5 | Complete |
+| CPOL-04 | Phase 5 | Complete |
 
 **Coverage:**
 - v1.1 requirements: 16 total

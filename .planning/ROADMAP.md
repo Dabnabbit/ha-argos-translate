@@ -48,7 +48,7 @@ Plans:
   3. When source is "Auto-detect", the target dropdown shows all available languages (not filtered by source)
   4. When the detected language is not installed, the card shows a user-visible message explaining the limitation instead of silently failing
   5. Card displays specific error messages distinguishing connection failure, bad request, and timeout; disabled translate button shows a reason why it is disabled; all form controls have ARIA labels; language row wraps properly on narrow screens
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 Plans:
 - [ ] 05-01-PLAN.md — Backend auto-detect: api.py /detect + dict return, services.py validation bypass + detection fields, tests
 - [ ] 05-02-PLAN.md — Card polish: error discrimination, disabled button reason, ARIA labels, responsive layout with CSS container queries
@@ -73,5 +73,5 @@ Plans:
 | 2. Translation Service + Card | v1.0 | 2/2 | Complete | 2026-02-21 |
 | 3. Polish + Validation | v1.0 | 2/2 | Complete | 2026-02-21 |
 | 4. Options Flow Fix | v1.1 | 1/1 | Complete | 2026-02-21 |
-| 5. Auto-Detect + Card Polish | 1/3 | In Progress|  | — |
+| 5. Auto-Detect + Card Polish | 2/3 | In Progress|  | — |
 | 6. Deploy Validation + Stabilization | v1.1 | 0/? | Not started | — |
