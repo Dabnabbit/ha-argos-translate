@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-21)
 
 **Core value:** Local, privacy-respecting text translation via self-hosted LibreTranslate — no cloud, no API limits
-**Current focus:** v1.1 Enhancement — Phase 5 all 6 plans complete. All 4 UAT gap-closure fixes applied and human-verified on live dashboard. Ready for final UAT re-test sign-off.
+**Current focus:** v1.1 Enhancement — Phase 5 all 6 plans complete + 1 verifier-caught fix. Deploy + UAT re-test needed for final sign-off.
 
 ## Current Position
 
-Phase: 5 (Auto-Detect + Card Polish — COMPLETE)
-Current Plan: 05-06 complete (6/6 plans executed)
-Status: All plans complete. Card v0.5.2 live and verified. UAT re-test pending for final sign-off.
-Last activity: 2026-02-22 — 05-06 executed: card height constraint + ResizeObserver layout, verified on live HA
+Phase: 5 (Auto-Detect + Card Polish — all code complete, UAT pending)
+Current Plan: 6/6 plans executed + 1 post-verification fix (resp.error display)
+Status: All code changes committed. Needs deploy + UAT re-test for final Phase 5 sign-off.
+Last activity: 2026-02-22 — 05-05 + 05-06 gap closure executed, verifier caught 1 remaining gap (card not reading resp.error), fixed in 617993c
 
 Progress: [██████████] 100% (Phase 5 all plans complete)
 
@@ -118,8 +118,9 @@ All architectural decisions logged in PROJECT.md Key Decisions table.
 
 ### Pending Todos
 
-- UAT re-test (Phase 5 final sign-off) — all 4 gap-closure fixes applied and card v0.5.2 live
-- Card JS may need updates to handle partial response format (error field + detected_language in result dict, not just on exception) — check during UAT re-test
+- Deploy all changes to QNAP HA instance: `rsync -av custom_components/argos_translate/ Dabentz@192.168.50.250:/share/CACHEDEV1_DATA/Container/homeassistant/config/custom_components/argos_translate/`
+- Reload integration + hard refresh browser
+- UAT re-test (Phase 5 final sign-off) — run `/gsd:verify-work 5`
 
 ### Blockers/Concerns
 
@@ -129,6 +130,6 @@ All architectural decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 05-auto-detect-card-polish 05-06-PLAN.md (card CSS gap closure — all Phase 5 plans complete)
-Resume action: UAT re-test to confirm all 16 requirements met across all 4 gap-closure fixes
-Resume file: N/A — awaiting UAT re-test sign-off
+Stopped at: All Phase 5 code complete (6 plans + 1 verifier fix). Verifier scored 19/20, fixed the gap (card resp.error display), not re-verified yet.
+Resume action: Deploy to QNAP, reload integration, hard refresh browser, then `/gsd:verify-work 5` for UAT
+Resume file: .planning/phases/05-auto-detect-card-polish/05-VERIFICATION.md (status: gaps_found — needs re-run after resp.error fix)
