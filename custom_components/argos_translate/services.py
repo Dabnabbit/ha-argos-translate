@@ -16,7 +16,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
-from .api import CannotConnectError
+from .api import CannotConnectError, TranslationError
 from .const import ATTR_SOURCE, ATTR_TARGET, ATTR_TEXT, DOMAIN, SERVICE_DETECT, SERVICE_TRANSLATE
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,9 +87,16 @@ def async_register_services(hass: HomeAssistant) -> None:
         try:
             result = await coordinator.async_translate(text, source, target)
         except CannotConnectError as err:
-            # Trigger immediate coordinator refresh so binary_sensor status
-            # updates to offline without waiting for the 5-min poll cycle
-            await coordinator.async_request_refresh()
+            # Immediately flip coordinator to error state so binary_sensor goes
+            # offline without waiting for the 5-min poll cycle. async_set_update_error
+            # is a synchronous @callback — no await needed, no debouncer delay.
+            coordinator.async_set_update_error(err)
+            raise HomeAssistantError(
+                f"Translation failed: {err}"
+            ) from err
+        except TranslationError as err:
+            # HTTP 4xx from server — server IS reachable (valid HTTP response),
+            # so do NOT mark coordinator as failed. Just surface the error.
             raise HomeAssistantError(
                 f"Translation failed: {err}"
             ) from err
@@ -136,9 +143,15 @@ def async_register_services(hass: HomeAssistant) -> None:
         try:
             candidates = await coordinator.async_detect_languages(text)
         except CannotConnectError as err:
-            # Trigger immediate coordinator refresh so binary_sensor status
-            # updates to offline without waiting for the 5-min poll cycle
-            await coordinator.async_request_refresh()
+            # Immediately flip coordinator to error state so binary_sensor goes
+            # offline without waiting for the 5-min poll cycle. async_set_update_error
+            # is a synchronous @callback — no await needed, no debouncer delay.
+            coordinator.async_set_update_error(err)
+            raise HomeAssistantError(
+                f"Language detection failed: {err}"
+            ) from err
+        except TranslationError as err:
+            # HTTP 4xx from server — server IS reachable, do NOT mark coordinator failed.
             raise HomeAssistantError(
                 f"Language detection failed: {err}"
             ) from err

@@ -21,6 +21,14 @@ class InvalidAuthError(Exception):
     """Raised when the API returns a 401 or 403 response."""
 
 
+class TranslationError(Exception):
+    """Raised when the server returns a semantic error (HTTP 4xx, excluding 401/403).
+
+    Distinct from CannotConnectError: the server IS reachable and understood the
+    request but cannot fulfill it (e.g., translation pair not available, HTTP 400).
+    """
+
+
 class ArgosTranslateApiClient:
     """API client for LibreTranslate server."""
 
@@ -65,7 +73,7 @@ class ArgosTranslateApiClient:
             )
 
         if response.status >= 400:
-            raise CannotConnectError(
+            raise TranslationError(
                 f"Server returned HTTP {response.status}: {response.reason}"
             )
 
