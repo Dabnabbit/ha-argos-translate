@@ -48,7 +48,11 @@ Plans:
   3. When source is "Auto-detect", the target dropdown shows all available languages (not filtered by source)
   4. When the detected language is not installed, the card shows a user-visible message explaining the limitation instead of silently failing
   5. Card displays specific error messages distinguishing connection failure, bad request, and timeout; disabled translate button shows a reason why it is disabled; all form controls have ARIA labels; language row wraps properly on narrow screens
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 05-01-PLAN.md — Backend auto-detect: api.py /detect + dict return, services.py validation bypass + detection fields, tests
+- [ ] 05-02-PLAN.md — Card polish: error discrimination, disabled button reason, ARIA labels, responsive layout with CSS container queries
+- [ ] 05-03-PLAN.md — Card auto-detect UI: Auto-detect dropdown default, target filtering, detection feedback display
 
 ### Phase 6: Deploy Validation + Stabilization
 **Goal**: Integration is verified working end-to-end on a real Home Assistant instance and all bugs discovered during testing are resolved
@@ -69,5 +73,5 @@ Plans:
 | 2. Translation Service + Card | v1.0 | 2/2 | Complete | 2026-02-21 |
 | 3. Polish + Validation | v1.0 | 2/2 | Complete | 2026-02-21 |
 | 4. Options Flow Fix | v1.1 | 1/1 | Complete | 2026-02-21 |
-| 5. Auto-Detect + Card Polish | v1.1 | 0/? | Context gathered | — |
+| 5. Auto-Detect + Card Polish | v1.1 | 0/3 | Planned | — |
 | 6. Deploy Validation + Stabilization | v1.1 | 0/? | Not started | — |
