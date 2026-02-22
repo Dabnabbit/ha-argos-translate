@@ -81,7 +81,7 @@ Each task was committed atomically:
 1. **Task 1: Add ARIA labels, error discrimination, and disabled button reason** - `034d882` (feat)
 2. **Task 2: Add responsive layout with CSS container queries and layout config override** - `2bbad41` (feat)
 
-**Plan metadata:** (pending docs commit)
+**Plan metadata:** `0c19835` (docs: complete card polish plan)
 
 ## Files Created/Modified
 
