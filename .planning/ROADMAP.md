@@ -73,5 +73,5 @@ Plans:
 | 2. Translation Service + Card | v1.0 | 2/2 | Complete | 2026-02-21 |
 | 3. Polish + Validation | v1.0 | 2/2 | Complete | 2026-02-21 |
 | 4. Options Flow Fix | v1.1 | 1/1 | Complete | 2026-02-21 |
-| 5. Auto-Detect + Card Polish | 3/3 | Complete   | 2026-02-22 | — |
+| 5. Auto-Detect + Card Polish | 3/3 | Complete    | 2026-02-22 | — |
 | 6. Deploy Validation + Stabilization | v1.1 | 0/? | Not started | — |
