@@ -9,11 +9,11 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 
 ## Current Position
 
-Phase: 4+ (Deploy Validation — COMPLETE)
-Status: Full end-to-end deployment verified on real HA hardware. Debug logging cleaned up. Ready for Phase 5.
-Last activity: 2026-02-21 — Deploy validation complete, debug cleanup done
+Phase: 5 (Auto-Detect + Card Polish — CONTEXT GATHERED)
+Status: Phase 5 context captured. Ready for research and planning.
+Last activity: 2026-02-21 — Phase 5 discuss-phase complete
 
-Progress: [████░░░░░░] 45% (v1.1 phases 4-6)
+Progress: [█████░░░░░] 50% (v1.1 phases 4-6)
 
 ## Deploy Validation Session (2026-02-21) — COMPLETE
 
@@ -82,5 +82,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-21
-Stopped at: Deploy validation complete, debug logging cleaned up
-Resume action: Run `/gsd:plan-phase 5` to plan Auto-Detect Language + Card Polish phase
+Stopped at: Phase 5 context gathered — detection feedback, error states, dropdown behavior, responsive layout decisions captured
+Resume action: Run `/gsd:plan-phase 5` to plan Auto-Detect + Card Polish phase
+Resume file: .planning/phases/05-auto-detect-card-polish/05-CONTEXT.md

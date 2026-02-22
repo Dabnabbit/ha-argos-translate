@@ -20,7 +20,7 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 
 ### v1.1 Enhancement
 
-- [ ] **Phase 4: Options Flow Fix** — Users can reconfigure server credentials without re-adding the integration
+- [x] **Phase 4: Options Flow Fix** — Users can reconfigure server credentials without re-adding the integration
 - [ ] **Phase 5: Auto-Detect + Card Polish** — Users can translate without knowing the source language; card is accessible and responsive
 - [ ] **Phase 6: Deploy Validation + Stabilization** — Integration is verified working on real HA hardware and ready for release
 
@@ -34,9 +34,9 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
   1. User opens Integration settings, changes host or API key, saves, and the integration immediately connects to the new server without a HA restart
   2. Saving an invalid host in options shows a connection error before committing the change
   3. After saving valid new credentials, HA logs show the integration reloading and the coordinator rebuilding against the new server address
-**Plans:** 1 plan
+**Plans:** 1 plan (complete)
 Plans:
-- [ ] 04-01-PLAN.md — Add async_reload to options flow + reload test assertions
+- [x] 04-01-PLAN.md — Add async_reload to options flow + reload test assertions
 
 ### Phase 5: Auto-Detect + Card Polish
 **Goal**: Users can translate without selecting a source language, see the detected language in the card, and interact with an accessible and mobile-friendly card
@@ -68,6 +68,6 @@ Plans:
 | 1. API Client + Data Layer | v1.0 | 2/2 | Complete | 2026-02-21 |
 | 2. Translation Service + Card | v1.0 | 2/2 | Complete | 2026-02-21 |
 | 3. Polish + Validation | v1.0 | 2/2 | Complete | 2026-02-21 |
-| 4. Options Flow Fix | v1.1 | 0/1 | Planning | — |
-| 5. Auto-Detect + Card Polish | v1.1 | 0/? | Not started | — |
+| 4. Options Flow Fix | v1.1 | 1/1 | Complete | 2026-02-21 |
+| 5. Auto-Detect + Card Polish | v1.1 | 0/? | Context gathered | — |
 | 6. Deploy Validation + Stabilization | v1.1 | 0/? | Not started | — |
