@@ -84,24 +84,79 @@ def async_register_services(hass: HomeAssistant) -> None:
                 )
 
         # Call translation API
-        try:
-            result = await coordinator.async_translate(text, source, target)
-        except CannotConnectError as err:
-            # Immediately flip coordinator to error state so binary_sensor goes
-            # offline without waiting for the 5-min poll cycle. async_set_update_error
-            # is a synchronous @callback — no await needed, no debouncer delay.
-            coordinator.async_set_update_error(err)
-            raise HomeAssistantError(
-                f"Translation failed: {err}"
-            ) from err
-        except TranslationError as err:
-            # HTTP 4xx from server — server IS reachable (valid HTTP response),
-            # so do NOT mark coordinator as failed. Just surface the error.
-            raise HomeAssistantError(
-                f"Translation failed: {err}"
-            ) from err
+        if source == AUTO_SOURCE:
+            # Detect-first: call /detect before /translate so we can surface the
+            # detected language even when the translation pair is unavailable (HTTP 400).
+            detect_result: list = []
+            try:
+                detect_result = await coordinator.async_detect_languages(text)
+            except (CannotConnectError, TranslationError):
+                pass  # Best-effort — if /detect fails, still attempt /translate
 
-        response: dict = {"translated_text": result["translatedText"]}
+            try:
+                result = await coordinator.async_translate(text, source, target)
+            except TranslationError as err:
+                # Server returned HTTP 4xx (e.g., pair not available).
+                # Server IS reachable — do NOT mark coordinator as failed.
+                # Surface the detection result from the pre-flight /detect call
+                # instead of raising, so the card can show what was detected.
+                response: dict = {"translated_text": "", "error": str(err)}
+                if detect_result:
+                    top = next(
+                        (d for d in detect_result if d.get("confidence", 0) >= 50.0),
+                        None,
+                    )
+                    if top:
+                        detected_code = top["language"]
+                        response["detected_language"] = detected_code
+                        response["detection_confidence"] = top["confidence"]
+
+                        # Compose a descriptive error naming the detected language
+                        # and the unsupported pair instead of a raw HTTP error.
+                        detected_name = detected_code
+                        target_name = target
+                        for lang in languages:
+                            if lang["code"] == detected_code:
+                                detected_name = lang.get("name", detected_code)
+                            if lang["code"] == target:
+                                target_name = lang.get("name", target)
+
+                        response["error"] = (
+                            f"Detected {detected_name} but {detected_name} \u2192"
+                            f" {target_name} translation pair is not available."
+                        )
+
+                        # Check if detected language is installed (DTCT-06)
+                        installed_codes = [lang["code"] for lang in languages]
+                        if detected_code not in installed_codes:
+                            response["uninstalled_detected_language"] = detected_code
+
+                return response
+            except CannotConnectError as err:
+                # True connection failure — server unreachable.
+                # Flip coordinator to error state immediately.
+                coordinator.async_set_update_error(err)
+                raise HomeAssistantError(
+                    f"Translation failed: {err}"
+                ) from err
+        else:
+            # Non-auto source — validate pair and translate directly.
+            try:
+                result = await coordinator.async_translate(text, source, target)
+            except CannotConnectError as err:
+                # Immediately flip coordinator to error state so binary_sensor goes
+                # offline without waiting for the 5-min poll cycle.
+                coordinator.async_set_update_error(err)
+                raise HomeAssistantError(
+                    f"Translation failed: {err}"
+                ) from err
+            except TranslationError as err:
+                # HTTP 4xx from server — server IS reachable, do NOT mark coordinator failed.
+                raise HomeAssistantError(
+                    f"Translation failed: {err}"
+                ) from err
+
+        response = {"translated_text": result["translatedText"]}
 
         if "detectedLanguage" in result:
             dl = result["detectedLanguage"]
