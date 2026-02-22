@@ -11,7 +11,7 @@ const LitElement = customElements.get("hui-masonry-view")
 const html = LitElement.prototype.html;
 const css = LitElement.prototype.css;
 
-const CARD_VERSION = "0.5.1";
+const CARD_VERSION = "0.5.2";
 const DETECTION_CONFIDENCE_THRESHOLD = 50.0;
 
 console.info(
@@ -85,14 +85,14 @@ class ArgosTranslateCard extends LitElement {
   }
 
   getCardSize() {
-    return 5;
+    return 4;
   }
 
   getGridOptions() {
     return {
-      rows: 5,
+      rows: 4,
       columns: 12,
-      min_rows: 4,
+      min_rows: 3,
       min_columns: 4,
     };
   }
@@ -434,24 +434,26 @@ class ArgosTranslateCard extends LitElement {
             </select>
           </div>
 
-          <div class="content-area">
-            <div class="input-panel">
-              <textarea
-                rows="4"
-                placeholder="Enter text to translate..."
-                aria-label="Text to translate"
-                .value="${this._inputText}"
-                @input="${this._inputChanged}"
-              ></textarea>
-            </div>
-            <div class="output-panel">
-              <textarea
-                rows="4"
-                readonly
-                placeholder=""
-                aria-label="Translated text"
-                .value="${this._outputText}"
-              ></textarea>
+          <div class="container-wrap">
+            <div class="content-area">
+              <div class="input-panel">
+                <textarea
+                  rows="4"
+                  placeholder="Enter text to translate..."
+                  aria-label="Text to translate"
+                  .value="${this._inputText}"
+                  @input="${this._inputChanged}"
+                ></textarea>
+              </div>
+              <div class="output-panel">
+                <textarea
+                  rows="4"
+                  readonly
+                  placeholder=""
+                  aria-label="Translated text"
+                  .value="${this._outputText}"
+                ></textarea>
+              </div>
             </div>
           </div>
 
@@ -489,6 +491,8 @@ class ArgosTranslateCard extends LitElement {
     return css`
       :host {
         display: block;
+        height: 100%;
+        box-sizing: border-box;
       }
       ha-card {
         overflow: hidden;
@@ -500,6 +504,8 @@ class ArgosTranslateCard extends LitElement {
         padding: 0 16px 16px;
         flex: 1;
         overflow: auto;
+      }
+      .container-wrap {
         container-type: inline-size;
         container-name: argos-card;
       }
