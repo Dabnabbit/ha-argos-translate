@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-21)
 
 **Core value:** Local, privacy-respecting text translation via self-hosted LibreTranslate — no cloud, no API limits
-**Current focus:** v1.1 Enhancement — Phase 5 UAT gap closure planned, ready for execution
+**Current focus:** v1.1 Enhancement — Phase 5 complete. All 4 plans executed. 5 UAT gaps closed. Ready for Phase 5 re-test.
 
 ## Current Position
 
-Phase: 5 (Auto-Detect + Card Polish — UAT gap closure pending)
-Current Plan: 05-04 gap closure plan created, verified, ready to execute
-Status: 3/3 original plans complete. UAT found 5 issues (1 major, 4 minor). All diagnosed. Fix plan 05-04 ready.
-Last activity: 2026-02-22 — UAT complete, gaps diagnosed, fix plan created and verified
+Phase: 5 (Auto-Detect + Card Polish — COMPLETE)
+Current Plan: 05-04 COMPLETE — all 5 UAT gaps closed
+Status: 4/4 plans complete. services.py and card v0.5.1 deployed with all fixes applied.
+Last activity: 2026-02-22 — 05-04 gap closure plan executed successfully
 
 Progress: [████████░░] 80% (v1.1 phases 4-6)
 
@@ -54,6 +54,7 @@ Progress: [████████░░] 80% (v1.1 phases 4-6)
 | Phases | 3 | 3 planned |
 | Requirements | 16 delivered | 16 in scope |
 | Lines of code | 2,052 | TBD |
+
 ### Phase 5 Execution Metrics
 
 | Plan | Duration | Tasks | Files |
@@ -61,6 +62,7 @@ Progress: [████████░░] 80% (v1.1 phases 4-6)
 | 05-01 | 127s | 3 | 7 |
 | 05-02 | 3min | 2 | 1 |
 | 05-03 | 139s | 2 | 1 |
+| 05-04 | 2min | 2 | 3 |
 
 ### Phase 5 UAT Results
 
@@ -103,10 +105,13 @@ All architectural decisions logged in PROJECT.md Key Decisions table.
 - [Phase 05]: auto: prefix in option values encodes candidate codes for re-translation without polluting language lists
 - [Phase 05]: Detection candidates fetched via argos_translate.detect service post-translation (best-effort, silent catch)
 - [Phase 05]: DETECTION_CONFIDENCE_THRESHOLD = 50.0 applied client-side to filter dropdown candidate options
+- [Phase 05]: async_request_refresh called before re-raising HomeAssistantError so coordinator poll runs immediately on CannotConnectError in both translate and detect handlers
+- [Phase 05]: Pre-swap guard reads _getTargetsForSource(oldTarget) to validate reversed pair before mutating state, surfaces descriptive error
+- [Phase 05-04]: container-type/container-name moved from :host to .card-content — shadow DOM boundary blocks :host container from being found by inner class @container queries
 
 ### Pending Todos
 
-- Execute 05-04 gap closure plan (5 fixes: swap guard, status refresh, CQ shadow DOM fix, grid rows, textarea resize)
+- Re-run Phase 5 UAT (11 tests) against updated services.py and card v0.5.1 to confirm all 5 gaps are closed
 
 ### Blockers/Concerns
 
@@ -116,6 +121,6 @@ All architectural decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Phase 5 UAT complete — 5 passed, 5 issues diagnosed, gap closure plan 05-04 created and verified
-Resume action: Run `/gsd:execute-phase 5 --gaps-only` to execute fix plan, then re-test
-Resume file: .planning/phases/05-auto-detect-card-polish/05-04-PLAN.md
+Stopped at: Completed 05-04-PLAN.md — all 5 UAT gaps closed, Phase 5 gap closure complete
+Resume action: Deploy to QNAP (rsync + reload integration + hard refresh), then re-run Phase 5 UAT
+Resume file: N/A — Phase 5 execution complete; next step is UAT re-test

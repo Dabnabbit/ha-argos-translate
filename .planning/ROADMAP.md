@@ -21,7 +21,7 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 ### v1.1 Enhancement
 
 - [x] **Phase 4: Options Flow Fix** — Users can reconfigure server credentials without re-adding the integration
-- [ ] **Phase 5: Auto-Detect + Card Polish** — Users can translate without knowing the source language; card is accessible and responsive (UAT gap closure in progress)
+- [x] **Phase 5: Auto-Detect + Card Polish** — Users can translate without knowing the source language; card is accessible and responsive (UAT gap closure in progress) (completed 2026-02-22)
 - [ ] **Phase 6: Deploy Validation + Stabilization** — Integration is verified working on real HA hardware and ready for release
 
 ## Phase Details
@@ -48,7 +48,7 @@ Plans:
   3. When source is "Auto-detect", the target dropdown shows all available languages (not filtered by source)
   4. When the detected language is not installed, the card shows a user-visible message explaining the limitation instead of silently failing
   5. Card displays specific error messages distinguishing connection failure, bad request, and timeout; disabled translate button shows a reason why it is disabled; all form controls have ARIA labels; language row wraps properly on narrow screens
-**Plans:** 4 plans (3 complete, 1 gap closure)
+**Plans:** 4/4 plans complete
 Plans:
 - [x] 05-01-PLAN.md — Backend auto-detect: api.py /detect + dict return, services.py validation bypass + detection fields, tests
 - [x] 05-02-PLAN.md — Card polish: error discrimination, disabled button reason, ARIA labels, responsive layout with CSS container queries
@@ -74,5 +74,5 @@ Plans:
 | 2. Translation Service + Card | v1.0 | 2/2 | Complete | 2026-02-21 |
 | 3. Polish + Validation | v1.0 | 2/2 | Complete | 2026-02-21 |
 | 4. Options Flow Fix | v1.1 | 1/1 | Complete | 2026-02-21 |
-| 5. Auto-Detect + Card Polish | v1.1 | 3/4 | UAT gap closure | — |
+| 5. Auto-Detect + Card Polish | 4/4 | Complete   | 2026-02-22 | — |
 | 6. Deploy Validation + Stabilization | v1.1 | 0/? | Not started | — |
