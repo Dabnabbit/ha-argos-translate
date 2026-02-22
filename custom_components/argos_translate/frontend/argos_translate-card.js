@@ -261,6 +261,8 @@ class ArgosTranslateCard extends LitElement {
         if (resp.uninstalled_detected_language) {
           const langName = this._getLanguageName(resp.uninstalled_detected_language) || resp.uninstalled_detected_language;
           this._error = `Detected language "${langName}" (${resp.uninstalled_detected_language}) is not installed on the LibreTranslate server. Translation may be incomplete.`;
+        } else if (resp.error) {
+          this._error = resp.error;
         }
 
         // Fetch detection candidates via the detect HA service (registered in Plan 05-01).
