@@ -10,6 +10,7 @@ CONF_USE_SSL = "use_ssl"
 CONF_NAME = "name"
 
 SERVICE_TRANSLATE = "translate"
+SERVICE_DETECT = "detect"
 ATTR_TEXT = "text"
 ATTR_SOURCE = "source"
 ATTR_TARGET = "target"

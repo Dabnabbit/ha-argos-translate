@@ -66,11 +66,21 @@
         },
         "source": {
           "name": "Source language",
-          "description": "The source language code (e.g., 'en' for English)."
+          "description": "The source language code (e.g., 'en' for English, or 'auto' for auto-detection)."
         },
         "target": {
           "name": "Target language",
           "description": "The target language code (e.g., 'es' for Spanish)."
+        }
+      }
+    },
+    "detect": {
+      "name": "Detect language",
+      "description": "Detect the language of the given text using LibreTranslate. Returns an array of candidate languages with confidence scores.",
+      "fields": {
+        "text": {
+          "name": "Text",
+          "description": "The text to detect the language of."
         }
       }
     }
