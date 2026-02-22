@@ -11,7 +11,7 @@ const LitElement = customElements.get("hui-masonry-view")
 const html = LitElement.prototype.html;
 const css = LitElement.prototype.css;
 
-const CARD_VERSION = "0.5.0";
+const CARD_VERSION = "0.5.1";
 const DETECTION_CONFIDENCE_THRESHOLD = 50.0;
 
 console.info(
@@ -85,14 +85,14 @@ class ArgosTranslateCard extends LitElement {
   }
 
   getCardSize() {
-    return 7;
+    return 5;
   }
 
   getGridOptions() {
     return {
-      rows: 7,
+      rows: 5,
       columns: 12,
-      min_rows: 5,
+      min_rows: 4,
       min_columns: 4,
     };
   }
@@ -200,14 +200,19 @@ class ArgosTranslateCard extends LitElement {
     if (this._source === "auto") return; // Can't swap auto-detect
     const oldSource = this._source;
     const oldTarget = this._target;
+
+    // Pre-swap guard: check if the reversed pair exists
+    const reversedTargets = this._getTargetsForSource(oldTarget);
+    if (!reversedTargets.includes(oldSource)) {
+      const targetName = this._getLanguageName(oldTarget);
+      const sourceName = this._getLanguageName(oldSource);
+      this._error = `Cannot swap \u2014 ${targetName} \u2192 ${sourceName} translation pair is not installed.`;
+      this.requestUpdate();
+      return;
+    }
+
     this._source = oldTarget;
     this._target = oldSource;
-
-    // Check if new combination is valid
-    const validTargets = this._getTargetsForSource(this._source);
-    if (!validTargets.includes(this._target)) {
-      this._target = validTargets[0] || "";
-    }
 
     // Move output to input for convenient back-translation
     if (this._outputText) {
@@ -215,6 +220,7 @@ class ArgosTranslateCard extends LitElement {
       this._outputText = "";
     }
 
+    this._error = null;
     this.requestUpdate();
   }
 
@@ -483,8 +489,6 @@ class ArgosTranslateCard extends LitElement {
     return css`
       :host {
         display: block;
-        container-type: inline-size;
-        container-name: argos-card;
       }
       ha-card {
         overflow: hidden;
@@ -496,6 +500,8 @@ class ArgosTranslateCard extends LitElement {
         padding: 0 16px 16px;
         flex: 1;
         overflow: auto;
+        container-type: inline-size;
+        container-name: argos-card;
       }
       .loading {
         display: flex;
@@ -560,7 +566,7 @@ class ArgosTranslateCard extends LitElement {
         color: var(--primary-text-color);
         font-family: inherit;
         font-size: 14px;
-        resize: vertical;
+        resize: none;
       }
       textarea[readonly] {
         background: var(--secondary-background-color, #f5f5f5);
