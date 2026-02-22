@@ -5,15 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-02-21)
 
 **Core value:** Local, privacy-respecting text translation via self-hosted LibreTranslate — no cloud, no API limits
-**Current focus:** v1.1 Enhancement — deploy validation complete, ready for Phase 5
+**Current focus:** v1.1 Enhancement — Phase 5 planned, ready for execution
 
 ## Current Position
 
-Phase: 5 (Auto-Detect + Card Polish — CONTEXT GATHERED)
-Status: Phase 5 context captured. Ready for research and planning.
-Last activity: 2026-02-21 — Phase 5 discuss-phase complete
+Phase: 5 (Auto-Detect + Card Polish — PLANNED)
+Status: 3 plans in 2 waves, verified by plan checker (2 iterations). Ready for execution.
+Last activity: 2026-02-22 — Phase 5 plan-phase complete
 
-Progress: [█████░░░░░] 50% (v1.1 phases 4-6)
+Progress: [██████░░░░] 60% (v1.1 phases 4-6)
 
 ## Deploy Validation Session (2026-02-21) — COMPLETE
 
@@ -64,7 +64,7 @@ All architectural decisions logged in PROJECT.md Key Decisions table.
 - Options flow uses explicit `async_reload` (not `OptionsFlowWithReload`) for HA 2025.7+ compatibility
 - Options flow reload pattern: async_update_entry -> await async_reload(entry_id) -> async_create_entry(data={})
 - No rollback logic on post-reload failure: HA default behavior (integration shows failed) is acceptable
-- Auto-detect uses `source="auto"` pass-through to LibreTranslate `/translate`; no separate `/detect` call needed
+- Auto-detect uses `source="auto"` pass-through to LibreTranslate `/translate`; separate `/detect` HA service added for detection candidates
 - Confidence threshold of 50.0 applied before surfacing detection results; value logged for tuning
 - Card JS version bump strategy: append `?v=VERSION` query param to Lovelace resource URL on each card change
 - LibreTranslate has no network discovery (no mDNS/Zeroconf/SSDP) — config flow requires manual host entry
@@ -81,7 +81,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-21
-Stopped at: Phase 5 context gathered — detection feedback, error states, dropdown behavior, responsive layout decisions captured
-Resume action: Run `/gsd:plan-phase 5` to plan Auto-Detect + Card Polish phase
-Resume file: .planning/phases/05-auto-detect-card-polish/05-CONTEXT.md
+Last session: 2026-02-22
+Stopped at: Phase 5 planned — 3 plans (05-01 backend, 05-02 card polish, 05-03 card auto-detect UI) verified and ready
+Resume action: Run `/gsd:execute-phase 5` to execute Auto-Detect + Card Polish phase
+Resume file: .planning/phases/05-auto-detect-card-polish/05-01-PLAN.md
