@@ -113,6 +113,18 @@ None - no external service configuration required. However, to see the binary_se
 - Backend is ready for a final UAT re-test to confirm status indicator flips offline and auto-detect returns detected language on pair-unavailable errors
 - Card JS may need updates to handle the new partial response format (`error` field alongside `detected_language`) — the card currently only processes `error` on exception, not in a result dict
 
+## Self-Check: PASSED
+
+| Item | Status |
+|------|--------|
+| `custom_components/argos_translate/api.py` | FOUND |
+| `custom_components/argos_translate/services.py` | FOUND |
+| `tests/test_services.py` | FOUND |
+| `.planning/phases/05-auto-detect-card-polish/05-05-SUMMARY.md` | FOUND |
+| Task 1 commit `dadd71e` | FOUND |
+| Task 2 commit `e307b00` | FOUND |
+| All 11 tests pass | VERIFIED |
+
 ---
 *Phase: 05-auto-detect-card-polish*
 *Completed: 2026-02-22*

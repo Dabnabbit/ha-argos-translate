@@ -21,7 +21,7 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 ### v1.1 Enhancement
 
 - [x] **Phase 4: Options Flow Fix** — Users can reconfigure server credentials without re-adding the integration
-- [ ] **Phase 5: Auto-Detect + Card Polish** — Users can translate without knowing the source language; card is accessible and responsive (second gap closure in progress)
+- [x] **Phase 5: Auto-Detect + Card Polish** — Users can translate without knowing the source language; card is accessible and responsive (all 6 plans complete — awaiting final UAT re-test)
 - [ ] **Phase 6: Deploy Validation + Stabilization** — Integration is verified working on real HA hardware and ready for release
 
 ## Phase Details
@@ -48,14 +48,14 @@ Plans:
   3. When source is "Auto-detect", the target dropdown shows all available languages (not filtered by source)
   4. When the detected language is not installed, the card shows a user-visible message explaining the limitation instead of silently failing
   5. Card displays specific error messages distinguishing connection failure, bad request, and timeout; disabled translate button shows a reason why it is disabled; all form controls have ARIA labels; language row wraps properly on narrow screens
-**Plans:** 6 plans (4 complete, 2 gap closure)
+**Plans:** 6 plans (6 complete)
 Plans:
 - [x] 05-01-PLAN.md — Backend auto-detect: api.py /detect + dict return, services.py validation bypass + detection fields, tests
 - [x] 05-02-PLAN.md — Card polish: error discrimination, disabled button reason, ARIA labels, responsive layout with CSS container queries
 - [x] 05-03-PLAN.md — Card auto-detect UI: Auto-detect dropdown default, target filtering, detection feedback display
 - [x] 05-04-PLAN.md — UAT gap closure: swap pair validation, status indicator update, container query fix, grid height, textarea resize
-- [ ] 05-05-PLAN.md — Gap closure: status indicator async_set_update_error, auto-detect fallback on pair unavailable, TranslationError exception
-- [ ] 05-06-PLAN.md — Gap closure: card height constraint (host height:100%), container query fix, version bump to 0.5.2
+- [x] 05-05-PLAN.md — Gap closure: status indicator async_set_update_error, auto-detect fallback on pair unavailable, TranslationError exception
+- [x] 05-06-PLAN.md — Gap closure: card height constraint (host height:100%), ResizeObserver layout, version bump to 0.5.2
 
 ### Phase 6: Deploy Validation + Stabilization
 **Goal**: Integration is verified working end-to-end on a real Home Assistant instance and all bugs discovered during testing are resolved
@@ -76,5 +76,5 @@ Plans:
 | 2. Translation Service + Card | v1.0 | 2/2 | Complete | 2026-02-21 |
 | 3. Polish + Validation | v1.0 | 2/2 | Complete | 2026-02-21 |
 | 4. Options Flow Fix | v1.1 | 1/1 | Complete | 2026-02-21 |
-| 5. Auto-Detect + Card Polish | v1.1 | 4/6 | Gap closure | — |
+| 5. Auto-Detect + Card Polish | v1.1 | 6/6 | Complete (UAT re-test pending) | 2026-02-22 |
 | 6. Deploy Validation + Stabilization | v1.1 | 0/? | Not started | — |

@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-21)
 
 **Core value:** Local, privacy-respecting text translation via self-hosted LibreTranslate — no cloud, no API limits
-**Current focus:** v1.1 Enhancement — Phase 5 re-test found 4 issues (3 persisting from first UAT + 1 new). Diagnosed. Needs second gap closure round.
+**Current focus:** v1.1 Enhancement — Phase 5 all 6 plans complete. All 4 UAT gap-closure fixes applied and human-verified on live dashboard. Ready for final UAT re-test sign-off.
 
 ## Current Position
 
-Phase: 5 (Auto-Detect + Card Polish — gap closure in progress)
-Current Plan: 05-05 complete (5/6 plans executed)
-Status: Backend gap closure done (status indicator + auto-detect fallback). 05-06 (card CSS) remaining.
-Last activity: 2026-02-22 — 05-05 executed: TranslationError + async_set_update_error + detect-first fallback
+Phase: 5 (Auto-Detect + Card Polish — COMPLETE)
+Current Plan: 05-06 complete (6/6 plans executed)
+Status: All plans complete. Card v0.5.2 live and verified. UAT re-test pending for final sign-off.
+Last activity: 2026-02-22 — 05-06 executed: card height constraint + ResizeObserver layout, verified on live HA
 
-Progress: [████████░░] 80% (v1.1 phases 4-6)
+Progress: [██████████] 100% (Phase 5 all plans complete)
 
 ## Deploy Validation Session (2026-02-21) — COMPLETE
 
@@ -64,6 +64,7 @@ Progress: [████████░░] 80% (v1.1 phases 4-6)
 | 05-03 | 139s | 2 | 1 |
 | 05-04 | 2min | 2 | 3 |
 | 05-05 | 3min | 2 | 3 |
+| 05-06 | ~2hrs | 2 | 1 |
 
 ### Phase 5 UAT Results
 
@@ -112,12 +113,13 @@ All architectural decisions logged in PROJECT.md Key Decisions table.
 - [Phase 05-auto-detect-card-polish]: async_set_update_error replaces async_request_refresh for immediate binary_sensor offline flip — eliminates 10s debouncer cooldown that silently dropped status updates after integration reload
 - [Phase 05-auto-detect-card-polish]: TranslationError(Exception) added to api.py for HTTP 4xx non-auth errors; CannotConnectError reserved for true connection/timeout failures only
 - [Phase 05-auto-detect-card-polish]: Detect-first pattern for auto source: call /detect before /translate so detection result is available if /translate fails with HTTP 400 (pair unavailable); return partial response instead of raising
+- [Phase 05-06]: ResizeObserver on :host width used instead of CSS container query — .card-content overflow:auto inside flex layout causes inline-size to resolve to 0, blocking container query. data-wide attribute toggled at >= 580px; :host([data-wide]) CSS selectors provide horizontal layout
+- [Phase 05-06]: :host{height:100%;box-sizing:border-box} + ha-card{height:100%} + .card-content{flex:1;overflow:auto} chain constrains card to HA sections grid slot with internal scroll
 
 ### Pending Todos
 
-- Execute 05-06 (card CSS gap closure: container query + card height fixes)
-- UAT re-test after 05-06 completes
-- Card JS may need updates to handle partial response format (error field + detected_language in result dict, not just on exception)
+- UAT re-test (Phase 5 final sign-off) — all 4 gap-closure fixes applied and card v0.5.2 live
+- Card JS may need updates to handle partial response format (error field + detected_language in result dict, not just on exception) — check during UAT re-test
 
 ### Blockers/Concerns
 
@@ -127,6 +129,6 @@ All architectural decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 05-auto-detect-card-polish 05-05-PLAN.md (backend gap closure complete)
-Resume action: /gsd:execute-phase 5 (run 05-06 card CSS gap closure) → then UAT re-test
-Resume file: .planning/phases/05-auto-detect-card-polish/05-06-PLAN.md
+Stopped at: Completed 05-auto-detect-card-polish 05-06-PLAN.md (card CSS gap closure — all Phase 5 plans complete)
+Resume action: UAT re-test to confirm all 16 requirements met across all 4 gap-closure fixes
+Resume file: N/A — awaiting UAT re-test sign-off
